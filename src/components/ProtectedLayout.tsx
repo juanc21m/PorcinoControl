@@ -22,6 +22,21 @@ function BiologicalDaemon() {
 }
 
 /**
+ * Carga el estado desde Supabase una sola vez al entrar al área autenticada.
+ * Sin esto, los dashboards y tablas mostrarían el estado vacío en memoria.
+ */
+function DataLoader() {
+  const fetchAll = useAppStore(s => s.fetchAll);
+  const loaded = useAppStore(s => s.loaded);
+
+  useEffect(() => {
+    if (!loaded) void fetchAll();
+  }, [loaded, fetchAll]);
+
+  return null;
+}
+
+/**
  * Guarda de rutas: si no hay sesión, redirige a `/login`. Si la hay, renderiza
  * el chrome del ERP (navbar + contenido) con el daemon biológico activo.
  */
@@ -32,6 +47,7 @@ export default function ProtectedLayout() {
 
   return (
     <>
+      <DataLoader />
       <BiologicalDaemon />
       <div className="flex min-h-screen bg-gray-950">
         <Navbar />

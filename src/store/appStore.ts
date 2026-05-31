@@ -14,6 +14,20 @@ import type {
   MedicalTask,
 } from '../types';
 import { evaluateBiologicalRules, getInventoryAlerts } from '../lib/biologicalEngine';
+import {
+  fetchAllData,
+  insertAnimal,
+  insertAnimals,
+  updateAnimal,
+  insertContact,
+  insertPurchase,
+  insertSale,
+  updatePurchase,
+  updateSale,
+  insertInventoryTx,
+  insertInventoryTxs,
+  setFeedInventory,
+} from '../lib/db';
 
 // ---------------------------------------------------------------------------
 // Simulated "today" — drives the biological engine.
@@ -23,7 +37,7 @@ import { evaluateBiologicalRules, getInventoryAlerts } from '../lib/biologicalEn
 const CURRENT_DATE = '2026-05-30';
 
 // ---------------------------------------------------------------------------
-// Tag counter helper
+// Helpers
 // ---------------------------------------------------------------------------
 
 function getNextTag(animals: Animal[], prefix: 'M' | 'F'): string {
@@ -33,6 +47,11 @@ function getNextTag(animals: Animal[], prefix: 'M' | 'F'): string {
     .filter(n => !isNaN(n));
   const max = nums.length ? Math.max(...nums) : 0;
   return `${prefix}-${String(max + 1).padStart(6, '0')}`;
+}
+
+/** Dispara una escritura a Supabase sin bloquear la UI; loguea errores. */
+function persist(p: Promise<unknown>, label: string): void {
+  p.catch(err => console.error(`[Supabase] ${label} falló:`, err));
 }
 
 // ---------------------------------------------------------------------------
@@ -50,10 +69,18 @@ interface AppState {
   dismissedAlertIds: string[];
   completedTaskIds: string[];
 
+  // Estado de carga
+  loaded: boolean;
+  loading: boolean;
+  loadError: string | null;
+
   // Biological engine state (poblado por runBiologicalEngine)
   alerts: Alert[];
   kpis: KPIUpdate[];
   medicalAgenda: MedicalTask[];
+
+  // Lectura inicial desde Supabase
+  fetchAll: () => Promise<void>;
 
   // Animal actions
   addAnimal: (data: Omit<Animal, 'id' | 'tag' | 'weights' | 'vaccinations' | 'history'>) => void;
@@ -98,9 +125,39 @@ export const useAppStore = create<AppState>((set, get) => ({
   currentDate: CURRENT_DATE,
   dismissedAlertIds: [],
   completedTaskIds: [],
+  loaded: false,
+  loading: false,
+  loadError: null,
   alerts: [],
   kpis: [],
   medicalAgenda: [],
+
+  // -------------------------------------------------------------------------
+  // Lectura inicial: rellena el estado desde Supabase.
+  // -------------------------------------------------------------------------
+  fetchAll: async () => {
+    set({ loading: true, loadError: null });
+    try {
+      const data = await fetchAllData();
+      set({
+        animals: data.animals,
+        contacts: data.contacts,
+        purchases: data.purchases,
+        sales: data.sales,
+        inventory: data.inventory,
+        inventoryHistory: data.inventoryHistory,
+        loaded: true,
+        loading: false,
+      });
+    } catch (err) {
+      console.error('[Supabase] fetchAll falló:', err);
+      set({
+        loading: false,
+        loaded: true,
+        loadError: err instanceof Error ? err.message : 'Error al cargar datos',
+      });
+    }
+  },
 
   addAnimal: (data) => {
     const { animals } = get();
@@ -116,15 +173,18 @@ export const useAppStore = create<AppState>((set, get) => ({
       history: [{ date: today, event: 'Animal registrado en sistema' }],
     };
     set({ animals: [...animals, newAnimal] });
+    persist(insertAnimal(newAnimal), 'insertAnimal');
   },
 
   registerFarrowing: (motherId, pigletCount, avgWeight) => {
     const { animals, currentDate } = get();
     const today = currentDate;
+    const mother = animals.find(a => a.id === motherId);
+
+    let motherChanges: Partial<Animal> | null = null;
     const updatedAnimals = animals.map(a => {
       if (a.id !== motherId) return a;
-      return {
-        ...a,
+      motherChanges = {
         heatStatus: 'Lactante' as const,
         feedType: 'Lactancia' as FeedType,
         dailyConsumption: 12,
@@ -136,9 +196,9 @@ export const useAppStore = create<AppState>((set, get) => ({
           { date: today, event: `Parto registrado: ${pigletCount} lechones, peso prom. ${avgWeight} lb` },
         ],
       };
+      return { ...a, ...motherChanges };
     });
 
-    const mother = animals.find(a => a.id === motherId);
     const newPiglets: Animal[] = Array.from({ length: pigletCount }, (_, i) => {
       const prefix: 'M' | 'F' = i % 2 === 0 ? 'M' : 'F';
       const tag = getNextTag(
@@ -149,10 +209,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     });
 
     set({ animals: [...updatedAnimals, ...newPiglets] });
+
+    if (motherChanges) persist(updateAnimal(motherId, motherChanges), 'updateAnimal(parto madre)');
+    persist(insertAnimals(newPiglets), 'insertAnimals(lechones)');
   },
 
   updateAnimalStatus: (id, status) => {
     set({ animals: get().animals.map(a => (a.id === id ? { ...a, status } : a)) });
+    persist(updateAnimal(id, { status }), 'updateAnimalStatus');
   },
 
   addPurchase: (data) => {
@@ -168,11 +232,13 @@ export const useAppStore = create<AppState>((set, get) => ({
       Lactancia:   { ...inventory.Lactancia },
     };
     const txs: InventoryTransaction[] = [];
+    const touched = new Set<FeedType>();
     for (const item of data.items) {
       nextInventory[item.feedType] = {
         sacos: nextInventory[item.feedType].sacos + item.sacosQty,
         lb: nextInventory[item.feedType].lb + item.sacosQty * lbPerSaco,
       };
+      touched.add(item.feedType);
       txs.push({
         id: crypto.randomUUID(), date: data.date, feedType: item.feedType,
         operation: 'Carga', sacos: item.sacosQty, lb: item.sacosQty * lbPerSaco, note: data.invoiceNumber,
@@ -180,10 +246,16 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
 
     set({
-      purchases: [...purchases, newPurchase],
+      purchases: [newPurchase, ...purchases],
       inventory: nextInventory,
       inventoryHistory: [...txs, ...inventoryHistory],
     });
+
+    persist(insertPurchase(newPurchase), 'insertPurchase');
+    persist(insertInventoryTxs(txs), 'insertInventoryTxs(compra)');
+    for (const ft of touched) {
+      persist(setFeedInventory(ft, nextInventory[ft].sacos, nextInventory[ft].lb), `setFeedInventory(${ft})`);
+    }
   },
 
   addSale: (data) => {
@@ -191,68 +263,95 @@ export const useAppStore = create<AppState>((set, get) => ({
     const id = crypto.randomUUID();
     const newSale: SaleInvoice = { ...data, id };
     const tags = data.pigTags ?? [];
+    const dispatched = tags.length ? animals.filter(a => tags.includes(a.tag)) : [];
     const updated = tags.length
       ? animals.map(a => (tags.includes(a.tag) ? { ...a, status: 'Despachado' as const } : a))
       : animals;
-    set({ sales: [...sales, newSale], animals: updated });
+    set({ sales: [newSale, ...sales], animals: updated });
+
+    persist(insertSale(newSale), 'insertSale');
+    for (const a of dispatched) {
+      persist(updateAnimal(a.id, { status: 'Despachado' }), 'updateAnimal(venta despacho)');
+    }
   },
 
   toggleInvoiceStatus: (type, id) => {
     if (type === 'purchase') {
-      set({ purchases: get().purchases.map(p => p.id === id ? { ...p, status: p.status === 'Pendiente' ? 'Pagado' : 'Pendiente' } : p) });
+      let next: PurchaseInvoice['status'] = 'Pendiente';
+      set({ purchases: get().purchases.map(p => {
+        if (p.id !== id) return p;
+        next = p.status === 'Pendiente' ? 'Pagado' : 'Pendiente';
+        return { ...p, status: next };
+      }) });
+      persist(updatePurchase(id, { status: next }), 'toggleInvoiceStatus(compra)');
     } else {
-      set({ sales: get().sales.map(s => s.id === id ? { ...s, status: s.status === 'Pendiente' ? 'Pagado' : 'Pendiente' } : s) });
+      let next: SaleInvoice['status'] = 'Pendiente';
+      set({ sales: get().sales.map(s => {
+        if (s.id !== id) return s;
+        next = s.status === 'Pendiente' ? 'Pagado' : 'Pendiente';
+        return { ...s, status: next };
+      }) });
+      persist(updateSale(id, { status: next }), 'toggleInvoiceStatus(venta)');
     }
   },
 
   payInvoice: (type, id, payment) => {
     if (type === 'purchase') {
       set({ purchases: get().purchases.map(p => p.id === id ? { ...p, status: 'Pagado', payment } : p) });
+      persist(updatePurchase(id, { status: 'Pagado', payment }), 'payInvoice(compra)');
     } else {
       set({ sales: get().sales.map(s => s.id === id ? { ...s, status: 'Pagado', payment } : s) });
+      persist(updateSale(id, { status: 'Pagado', payment }), 'payInvoice(venta)');
     }
   },
 
   unpayInvoice: (type, id) => {
     if (type === 'purchase') {
       set({ purchases: get().purchases.map(p => p.id === id ? { ...p, status: 'Pendiente', payment: undefined } : p) });
+      persist(updatePurchase(id, { status: 'Pendiente', payment: undefined }), 'unpayInvoice(compra)');
     } else {
       set({ sales: get().sales.map(s => s.id === id ? { ...s, status: 'Pendiente', payment: undefined } : s) });
+      persist(updateSale(id, { status: 'Pendiente', payment: undefined }), 'unpayInvoice(venta)');
     }
   },
 
   addContact: (data) => {
-    set({ contacts: [...get().contacts, { ...data, id: crypto.randomUUID() }] });
+    const newContact: Contact = { ...data, id: crypto.randomUUID() };
+    set({ contacts: [...get().contacts, newContact] });
+    persist(insertContact(newContact), 'insertContact');
   },
 
   loadFeed: (feedType, sacos, note) => {
     const { inventory, inventoryHistory, currentDate } = get();
     const lb = sacos * 35;
+    const next = { sacos: inventory[feedType].sacos + sacos, lb: inventory[feedType].lb + lb };
     const tx: InventoryTransaction = {
       id: crypto.randomUUID(), date: currentDate, feedType, operation: 'Carga', sacos, lb, note,
     };
     set({
-      inventory: { ...inventory, [feedType]: { sacos: inventory[feedType].sacos + sacos, lb: inventory[feedType].lb + lb } },
+      inventory: { ...inventory, [feedType]: next },
       inventoryHistory: [tx, ...inventoryHistory],
     });
+    persist(insertInventoryTx(tx), 'insertInventoryTx(carga)');
+    persist(setFeedInventory(feedType, next.sacos, next.lb), `setFeedInventory(${feedType})`);
   },
 
   useFeed: (feedType, lb, note) => {
     const { inventory, inventoryHistory, currentDate } = get();
     const sacosToRemove = Math.floor(lb / 35);
+    const next = {
+      sacos: Math.max(0, inventory[feedType].sacos - sacosToRemove),
+      lb: Math.max(0, inventory[feedType].lb - lb),
+    };
     const tx: InventoryTransaction = {
       id: crypto.randomUUID(), date: currentDate, feedType, operation: 'Consumo', lb, note,
     };
     set({
-      inventory: {
-        ...inventory,
-        [feedType]: {
-          sacos: Math.max(0, inventory[feedType].sacos - sacosToRemove),
-          lb: Math.max(0, inventory[feedType].lb - lb),
-        },
-      },
+      inventory: { ...inventory, [feedType]: next },
       inventoryHistory: [tx, ...inventoryHistory],
     });
+    persist(insertInventoryTx(tx), 'insertInventoryTx(consumo)');
+    persist(setFeedInventory(feedType, next.sacos, next.lb), `setFeedInventory(${feedType})`);
   },
 
   // ---- Biological engine actions ----
@@ -280,6 +379,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (!mutations.length) return;
     const { animals, currentDate } = get();
     let changed = false;
+    const persisted: { id: string; changes: Partial<Animal> }[] = [];
     const updated = animals.map(a => {
       const m = mutations.find(x => x.animalId === a.id);
       if (!m) return a;
@@ -288,13 +388,16 @@ export const useAppStore = create<AppState>((set, get) => ({
       );
       if (!needs) return a;
       changed = true;
-      return {
-        ...a,
-        ...m.changes,
-        history: [...a.history, { date: currentDate, event: m.reason }],
-      };
+      const history = [...a.history, { date: currentDate, event: m.reason }];
+      persisted.push({ id: a.id, changes: { ...m.changes, history } });
+      return { ...a, ...m.changes, history };
     });
-    if (changed) set({ animals: updated });
+    if (changed) {
+      set({ animals: updated });
+      for (const { id, changes } of persisted) {
+        persist(updateAnimal(id, changes), 'applyMutations');
+      }
+    }
   },
 
   dismissAlert: (id) => {
@@ -309,35 +412,44 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   confirmPregnancy: (animalId) => {
     const today = get().currentDate;
+    const changes: Partial<Animal> = { heatStatus: 'Embarazada' };
     set({
       animals: get().animals.map(a =>
         a.id === animalId
-          ? { ...a, heatStatus: 'Embarazada', history: [...a.history, { date: today, event: 'Embarazo confirmado (revisión día 21)' }] }
+          ? { ...a, ...changes, history: [...a.history, { date: today, event: 'Embarazo confirmado (revisión día 21)' }] }
           : a
       ),
     });
+    const a = get().animals.find(x => x.id === animalId);
+    persist(updateAnimal(animalId, { ...changes, history: a?.history }), 'confirmPregnancy');
   },
 
   retryMating: (animalId) => {
     const today = get().currentDate;
+    const changes: Partial<Animal> = { heatStatus: 'En Celo', inseminationDate: undefined, expectedFarrowingDate: undefined };
     set({
       animals: get().animals.map(a =>
         a.id === animalId
-          ? { ...a, heatStatus: 'En Celo', inseminationDate: undefined, expectedFarrowingDate: undefined, history: [...a.history, { date: today, event: 'Monta no efectiva — regresa a celo' }] }
+          ? { ...a, ...changes, history: [...a.history, { date: today, event: 'Monta no efectiva — regresa a celo' }] }
           : a
       ),
     });
+    const a = get().animals.find(x => x.id === animalId);
+    persist(updateAnimal(animalId, { ...changes, history: a?.history }), 'retryMating');
   },
 
   moveToMaternity: (animalId) => {
     const today = get().currentDate;
+    const changes: Partial<Animal> = { etapaActual: 'Maternidad', feedType: 'Lactancia', dailyConsumption: 12 };
     set({
       animals: get().animals.map(a =>
         a.id === animalId
-          ? { ...a, etapaActual: 'Maternidad', feedType: 'Lactancia', dailyConsumption: 12, history: [...a.history, { date: today, event: 'Trasladada a Maternidad (pre-parto)' }] }
+          ? { ...a, ...changes, history: [...a.history, { date: today, event: 'Trasladada a Maternidad (pre-parto)' }] }
           : a
       ),
     });
+    const a = get().animals.find(x => x.id === animalId);
+    persist(updateAnimal(animalId, { ...changes, history: a?.history }), 'moveToMaternity');
   },
 }));
 
