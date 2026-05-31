@@ -30,3 +30,32 @@
            border border-gray-700 transition-colors;
   }
 }
+
+/* ---- Splash screen animations ---- */
+@keyframes pig-run {
+  0%   { transform: translateX(-30vw) translateY(0)     rotate(-4deg) scaleX(1); }
+  25%  { transform: translateX(15vw)  translateY(-22px) rotate(4deg)  scaleX(1); }
+  50%  { transform: translateX(55vw)  translateY(0)     rotate(-4deg) scaleX(1); }
+  75%  { transform: translateX(90vw)  translateY(-22px) rotate(4deg)  scaleX(1); }
+  100% { transform: translateX(125vw) translateY(0)     rotate(-4deg) scaleX(1); }
+}
+
+@keyframes ground-slide {
+  from { background-position-x: 0; }
+  to   { background-position-x: -80px; }
+}
+
+@keyframes text-pulse {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 1; }
+}
+
+@keyframes splash-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-pig-run    { animation: pig-run 2.4s cubic-bezier(0.45, 0, 0.55, 1) infinite; }
+.animate-ground     { animation: ground-slide 0.6s linear infinite; }
+.animate-text-pulse { animation: text-pulse 1.6s ease-in-out infinite; }
+.animate-splash-in  { animation: splash-fade-in 0.6s ease-out both; }

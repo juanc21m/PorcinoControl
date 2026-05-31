@@ -1,8 +1,9 @@
-import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, GitBranch, DollarSign, Database, PiggyBank, Package, Workflow, Contact } from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, GitBranch, DollarSign, Database, PiggyBank, Package, Workflow, Contact, LogOut } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const links = [
-  { to: '/',            label: 'Dashboard',      icon: LayoutDashboard },
+  { to: '/dashboard',   label: 'Dashboard',      icon: LayoutDashboard },
   { to: '/traceability',label: 'Trazabilidad',   icon: GitBranch },
   { to: '/etapas',      label: 'Etapas',          icon: Workflow },
   { to: '/inventory',   label: 'Inventario',      icon: Package },
@@ -12,6 +13,14 @@ const links = [
 ];
 
 export default function Navbar() {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
+
   return (
     <aside className="fixed left-0 top-0 h-screen w-56 bg-gray-900 border-r border-gray-800 flex flex-col z-50">
       {/* Logo */}
@@ -28,7 +37,7 @@ export default function Navbar() {
           <NavLink
             key={to}
             to={to}
-            end={to === '/'}
+            end={to === '/dashboard'}
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 isActive
@@ -43,8 +52,15 @@ export default function Navbar() {
         ))}
       </nav>
 
-      <div className="px-4 py-3 border-t border-gray-800">
-        <p className="text-xs text-gray-600">v1.0.0 — Demo</p>
+      <div className="px-2 py-3 border-t border-gray-800 space-y-2">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white transition-all"
+        >
+          <LogOut size={18} />
+          Cerrar Sesión
+        </button>
+        <p className="text-xs text-gray-600 px-3">v1.0.0 — Demo</p>
       </div>
     </aside>
   );
