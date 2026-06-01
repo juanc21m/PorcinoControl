@@ -201,7 +201,7 @@ export default function SplashScreen() {
           Porci<span className="text-emerald-300">Control</span>
         </h1>
         <p className="mt-2 text-emerald-50/90 text-sm sm:text-base font-medium drop-shadow">
-          Agro Comercial Moreno · Volcán, Chiriquí
+          Agro Comercial Moreno
         </p>
       </div>
 
