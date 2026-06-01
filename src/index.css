@@ -59,3 +59,42 @@
 .animate-ground     { animation: ground-slide 0.6s linear infinite; }
 .animate-text-pulse { animation: text-pulse 1.6s ease-in-out infinite; }
 .animate-splash-in  { animation: splash-fade-in 0.6s ease-out both; }
+
+/* ---- Pantalla de bienvenida interactiva (granjero + carretilla) ---- */
+@keyframes farmer-walk {
+  0%   { transform: translateX(-200px); }
+  100% { transform: translateX(calc(100vw + 200px)); }
+}
+@keyframes farmer-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+@keyframes wheel-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes leg-swing-a {
+  0%, 100% { transform: rotate(18deg); }
+  50%      { transform: rotate(-18deg); }
+}
+@keyframes leg-swing-b {
+  0%, 100% { transform: rotate(-18deg); }
+  50%      { transform: rotate(18deg); }
+}
+@keyframes cloud-drift {
+  from { transform: translateX(-10px); }
+  to   { transform: translateX(30px); }
+}
+@keyframes sun-glow {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 0.9; }
+}
+
+/* El grupo exterior cruza la pantalla; el interior hace el "bob" al caminar. */
+.animate-farmer-walk { animation: farmer-walk 14s linear infinite; }
+.animate-farmer-bob  { animation: farmer-bob 0.7s ease-in-out infinite; }
+.animate-wheel-spin  { transform-box: fill-box; transform-origin: center;     animation: wheel-spin 1.6s linear infinite; }
+.animate-leg-a       { transform-box: fill-box; transform-origin: top center;  animation: leg-swing-a 0.7s ease-in-out infinite; }
+.animate-leg-b       { transform-box: fill-box; transform-origin: top center;  animation: leg-swing-b 0.7s ease-in-out infinite; }
+.animate-cloud-drift { animation: cloud-drift 9s ease-in-out infinite alternate; }
+.animate-sun-glow    { animation: sun-glow 4s ease-in-out infinite; }
