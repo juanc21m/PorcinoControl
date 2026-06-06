@@ -20,18 +20,28 @@ export default function Login() {
     e.preventDefault();
     setError('');
     setSubmitting(true);
-    const err = await login(email, password);
-    setSubmitting(false);
-    if (err) {
-      // Supabase devuelve "Invalid login credentials" para correo/clave erróneos.
-      setError(
-        /invalid login/i.test(err)
-          ? 'Credenciales incorrectas. Verifica tu correo y contraseña.'
-          : err,
-      );
+    try {
+      const err = await login(email, password);
+      if (err) {
+        // Supabase devuelve "Invalid login credentials" para correo/clave erróneos.
+        setError(
+          /invalid login/i.test(err)
+            ? 'Credenciales incorrectas. Verifica tu correo y contraseña.'
+            : /email not confirmed/i.test(err)
+              ? 'Tu correo aún no está confirmado. Pide al administrador que lo active.'
+              : err,
+        );
+      }
+      // En caso de éxito, onAuthStateChange actualiza la sesión y el <Navigate>
+      // de arriba redirige automáticamente al dashboard.
+    } catch (err) {
+      // Red de seguridad final: cualquier excepción inesperada se muestra como
+      // mensaje en vez de tumbar la app con un "Type error".
+      console.error('[login] excepción no controlada:', err);
+      setError('No se pudo procesar el inicio de sesión. Revisa tu conexión e inténtalo de nuevo.');
+    } finally {
+      setSubmitting(false);
     }
-    // En caso de éxito, onAuthStateChange actualiza la sesión y el <Navigate> de
-    // arriba redirige automáticamente al dashboard.
   }
 
   return (

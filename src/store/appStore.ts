@@ -360,19 +360,25 @@ export const useAppStore = create<AppState>((set, get) => ({
   // automáticas y publica alerts / kpis / medicalAgenda en el estado global.
   runBiologicalEngine: () => {
     const { animals, currentDate, inventory, dismissedAlertIds, completedTaskIds } = get();
-    const { alerts: bioAlerts, mutations, kpis, medicalAgenda } = evaluateBiologicalRules(animals, currentDate);
-    const invAlerts = getInventoryAlerts(inventory);
+    try {
+      const { alerts: bioAlerts, mutations, kpis, medicalAgenda } = evaluateBiologicalRules(animals, currentDate);
+      const invAlerts = getInventoryAlerts(inventory);
 
-    const severityRank: Record<string, number> = { critical: 0, warning: 1, info: 2 };
-    const alerts = [...bioAlerts, ...invAlerts]
-      .filter(a => !dismissedAlertIds.includes(a.id))
-      .sort((a, b) => severityRank[a.severity] - severityRank[b.severity]);
-    const agenda = medicalAgenda.filter(t => !completedTaskIds.includes(t.id));
+      const severityRank: Record<string, number> = { critical: 0, warning: 1, info: 2 };
+      const alerts = [...bioAlerts, ...invAlerts]
+        .filter(a => !dismissedAlertIds.includes(a.id))
+        .sort((a, b) => severityRank[a.severity] - severityRank[b.severity]);
+      const agenda = medicalAgenda.filter(t => !completedTaskIds.includes(t.id));
 
-    // Aplica mutaciones (no-op si no hay cambios → evita bucles de render).
-    get().applyMutations(mutations);
+      // Aplica mutaciones (no-op si no hay cambios → evita bucles de render).
+      get().applyMutations(mutations);
 
-    set({ alerts, kpis, medicalAgenda: agenda });
+      set({ alerts, kpis, medicalAgenda: agenda });
+    } catch (err) {
+      // Datos reales con campos inesperados (fechas nulas, etc.) no deben tumbar
+      // toda la app al entrar. Se registra y se continúa sin alertas/kpis.
+      console.error('[motor biológico] error al evaluar reglas:', err);
+    }
   },
 
   applyMutations: (mutations) => {

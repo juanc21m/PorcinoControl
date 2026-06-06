@@ -58,11 +58,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string): Promise<string | null> => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
-      password,
-    });
-    return error ? error.message : null;
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+      return error ? error.message : null;
+    } catch (err) {
+      // signInWithPassword puede *lanzar* (no solo devolver error) ante fallos de
+      // red/fetch (p.ej. "TypeError: Failed to fetch"). Lo capturamos para que el
+      // formulario nunca crashee y muestre un mensaje útil.
+      console.error('[auth] login lanzó excepción:', err);
+      return err instanceof Error ? err.message : 'Error de conexión';
+    }
   };
 
   const logout = async (): Promise<void> => {
