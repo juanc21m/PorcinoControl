@@ -41,7 +41,17 @@ function DataLoader() {
  * el chrome del ERP (navbar + contenido) con el daemon biológico activo.
  */
 export default function ProtectedLayout() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
+
+  // Mientras Supabase restaura la sesión persistida, esperar (evita un rebote
+  // al /login en cada recarga antes de saber si hay sesión válida).
+  if (loading) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-gray-950">
+        <div className="h-8 w-8 rounded-full border-2 border-brand-700 border-t-transparent animate-spin" />
+      </div>
+    );
+  }
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 

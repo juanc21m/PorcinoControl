@@ -1,26 +1,37 @@
 import { useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { PiggyBank, Mail, Lock, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
-  const { login, isAuthenticated } = useAuth();
-  const navigate = useNavigate();
+  const { login, isAuthenticated, loading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  // Si ya hay sesión, no mostrar el login: ir directo al dashboard.
+  // Mientras se restaura la sesión persistida, no parpadear el formulario.
+  if (loading) return <div className="fixed inset-0 bg-slate-900" />;
+
+  // Si ya hay sesión activa en Supabase, ir directo al dashboard.
   if (isAuthenticated) return <Navigate to="/dashboard" replace />;
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-    if (login(email, password)) {
-      navigate('/dashboard', { replace: true });
-    } else {
-      setError('Credenciales incorrectas. Verifica tu correo y contraseña.');
+    setSubmitting(true);
+    const err = await login(email, password);
+    setSubmitting(false);
+    if (err) {
+      // Supabase devuelve "Invalid login credentials" para correo/clave erróneos.
+      setError(
+        /invalid login/i.test(err)
+          ? 'Credenciales incorrectas. Verifica tu correo y contraseña.'
+          : err,
+      );
     }
+    // En caso de éxito, onAuthStateChange actualiza la sesión y el <Navigate> de
+    // arriba redirige automáticamente al dashboard.
   }
 
   return (
@@ -82,9 +93,10 @@ export default function Login() {
 
           <button
             type="submit"
-            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors shadow-lg shadow-emerald-900/30"
+            disabled={submitting}
+            className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-lg text-sm transition-colors shadow-lg shadow-emerald-900/30"
           >
-            Ingresar
+            {submitting ? 'Ingresando…' : 'Ingresar'}
           </button>
         </form>
 

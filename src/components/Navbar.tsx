@@ -13,11 +13,14 @@ const links = [
 ];
 
 export default function Navbar() {
-  const { logout } = useAuth();
+  const { logout, isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
+  // RBAC: el DB Portal solo es visible para el admin.
+  const visibleLinks = links.filter(l => l.to !== '/portal' || isAdmin);
+
+  const handleLogout = async () => {
+    await logout();
     navigate('/login', { replace: true });
   };
 
@@ -33,7 +36,7 @@ export default function Navbar() {
 
       {/* Nav links */}
       <nav className="flex-1 px-2 py-4 space-y-1">
-        {links.map(({ to, label, icon: Icon }) => (
+        {visibleLinks.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}

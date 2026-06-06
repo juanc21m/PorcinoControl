@@ -1,43 +1,91 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
+import type { Session, User } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
 
-interface AuthContextValue {
-  isAuthenticated: boolean;
-  login: (email: string, password: string) => boolean;
-  logout: () => void;
+export type Role = 'admin' | 'user';
+
+/**
+ * RBAC basado en email. El aprovisionamiento de usuarios es manual en el backend
+ * (Supabase Auth); aquí solo derivamos el rol a partir del correo de la sesión.
+ *  - admin: acceso total (incl. DB Portal)
+ *  - user : acceso restringido
+ */
+const ADMIN_EMAILS = ['juan59824@gmail.com'];
+
+function roleForEmail(email?: string | null): Role {
+  return email && ADMIN_EMAILS.includes(email.trim().toLowerCase()) ? 'admin' : 'user';
 }
 
-// Credenciales hardcodeadas (mock). Sustituir por Supabase Auth en Fase 3.
-const VALID_EMAIL = 'agrocomercialmoreno@gmail.com';
-const VALID_PASSWORD = 'admin';
-const STORAGE_KEY = 'pc_auth';
+interface AuthContextValue {
+  session: Session | null;
+  user: User | null;
+  email: string | null;
+  role: Role | null;
+  isAuthenticated: boolean;
+  isAdmin: boolean;
+  loading: boolean;
+  /** Devuelve un mensaje de error (string) o `null` si el login fue exitoso. */
+  login: (email: string, password: string) => Promise<string | null>;
+  logout: () => Promise<void>;
+}
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
-    () => localStorage.getItem(STORAGE_KEY) === '1',
-  );
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const login = (email: string, password: string): boolean => {
-    if (email.trim().toLowerCase() === VALID_EMAIL && password === VALID_PASSWORD) {
-      localStorage.setItem(STORAGE_KEY, '1');
-      setIsAuthenticated(true);
-      return true;
-    }
-    return false;
+  useEffect(() => {
+    let mounted = true;
+
+    // Restaura la sesión persistida (si existe) al cargar la app.
+    supabase.auth.getSession().then(({ data }) => {
+      if (!mounted) return;
+      setSession(data.session);
+      setLoading(false);
+    });
+
+    // Mantiene el estado sincronizado con login / logout / refresh de token.
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+    });
+
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
+
+  const login = async (email: string, password: string): Promise<string | null> => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password,
+    });
+    return error ? error.message : null;
   };
 
-  const logout = () => {
-    localStorage.removeItem(STORAGE_KEY);
-    setIsAuthenticated(false);
+  const logout = async (): Promise<void> => {
+    await supabase.auth.signOut();
   };
 
-  return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const user = session?.user ?? null;
+  const email = user?.email ?? null;
+  const role = user ? roleForEmail(email) : null;
+
+  const value: AuthContextValue = {
+    session,
+    user,
+    email,
+    role,
+    isAuthenticated: !!session,
+    isAdmin: role === 'admin',
+    loading,
+    login,
+    logout,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components

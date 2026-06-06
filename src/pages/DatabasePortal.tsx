@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { Database, Play, Code2, Globe } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
+import { useAuth } from '../context/AuthContext';
 
 const SQL_SCHEMA = `-- PorciControl PostgreSQL Schema
 -- Generated: 2026-05-30
@@ -101,11 +103,16 @@ CREATE INDEX idx_sale_invoices_date ON sale_invoices(invoice_date);
 type EndpointKey = 'GET /animals' | 'GET /animals/:tag' | 'POST /animals/farrowing' | 'GET /invoices' | 'GET /inventory';
 
 export default function DatabasePortal() {
+  const { isAdmin } = useAuth();
   const { animals, purchases, sales, inventory } = useAppStore();
   const [tab, setTab] = useState<'schema' | 'sandbox'>('schema');
   const [endpoint, setEndpoint] = useState<EndpointKey>('GET /animals');
   const [tagParam, setTagParam] = useState('M-00247');
   const [response, setResponse] = useState<string | null>(null);
+
+  // RBAC: bloqueo a nivel de página. Si un no-admin fuerza la URL /portal,
+  // se le redirige al dashboard. (Todos los hooks se llaman antes de este return.)
+  if (!isAdmin) return <Navigate to="/dashboard" replace />;
 
   function execute() {
     let result: unknown;
