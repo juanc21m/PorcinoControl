@@ -1,4 +1,5 @@
-import { differenceInDays, parseISO } from 'date-fns';
+import { differenceInDays } from 'date-fns';
+import { safeParseISO } from './date';
 import type {
   Animal,
   Alert,
@@ -43,11 +44,11 @@ const MEDICAL_PROTOCOL: { day: number; task: string }[] = [
 ];
 
 function ageInDays(birthDate: string, currentDate: string): number {
-  return differenceInDays(parseISO(currentDate), parseISO(birthDate));
+  return differenceInDays(safeParseISO(currentDate), safeParseISO(birthDate));
 }
 
 function daysSince(date: string, currentDate: string): number {
-  return differenceInDays(parseISO(currentDate), parseISO(date));
+  return differenceInDays(safeParseISO(currentDate), safeParseISO(date));
 }
 
 // ---------------------------------------------------------------------------
@@ -301,7 +302,7 @@ export function getSalesProjection(animals: Animal[], currentDate: string): { co
   const tags = animals
     .filter(a => a.status === 'Activo' && a.role === 'Ceba')
     .filter(a => {
-      const age = differenceInDays(parseISO(currentDate), parseISO(a.birthDate));
+      const age = differenceInDays(safeParseISO(currentDate), safeParseISO(a.birthDate));
       return age >= BIO.CEBA_EXIT_DAY - BIO.SALES_PROJECTION_WINDOW && age <= BIO.CEBA_EXIT_DAY;
     })
     .map(a => a.tag);

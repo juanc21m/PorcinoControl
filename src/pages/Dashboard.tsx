@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  parseISO, getYear, getMonth, getDate, getDaysInMonth, format,
+  getYear, getMonth, getDate, getDaysInMonth, format,
 } from 'date-fns';
+import { safeParseISO } from '../lib/date';
 import { es } from 'date-fns/locale';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -70,11 +71,14 @@ export default function Dashboard() {
   const [natDate, setNatDate] = useState(currentDate);
 
   const natalityData = useMemo(() => {
-    const ref = parseISO(natDate);
+    const ref = safeParseISO(natDate);
     const refYear = getYear(ref);
     const refMonth = getMonth(ref); // 0-indexed
 
-    const births = animals.map(a => parseISO(a.birthDate));
+    // Solo fechas de nacimiento válidas (evita crash si birthDate es nulo).
+    const births = animals
+      .map(a => safeParseISO(a.birthDate))
+      .filter(d => !isNaN(d.getTime()));
 
     if (natMode === 'Día') {
       // Nacimientos por día del mes seleccionado

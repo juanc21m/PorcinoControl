@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { differenceInDays, parseISO } from 'date-fns';
+import { differenceInDays } from 'date-fns';
+import { safeParseISO } from '../lib/date';
 import { RefreshCw, HeartPulse, Baby, Wheat, Scale, ChevronRight, Eye } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
@@ -16,11 +17,11 @@ const ETAPA_META: Record<EtapaProductiva, { icon: LucideIcon; accent: string; de
 };
 
 function ageInDays(birthDate: string, currentDate: string): number {
-  return differenceInDays(parseISO(currentDate), parseISO(birthDate));
+  return differenceInDays(safeParseISO(currentDate), safeParseISO(birthDate));
 }
 
 function daysSince(date: string, currentDate: string): number {
-  return Math.max(0, differenceInDays(parseISO(currentDate), parseISO(date)));
+  return Math.max(0, differenceInDays(safeParseISO(currentDate), safeParseISO(date)));
 }
 
 /** Días que el animal lleva dentro de su etapa actual (aproximado por hitos biológicos). */

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
+import ErrorBoundary from './ErrorBoundary';
 import { useAppStore } from '../store/appStore';
 import { useAuth } from '../context/AuthContext';
 
@@ -62,7 +63,9 @@ export default function ProtectedLayout() {
       <div className="flex min-h-screen bg-gray-950">
         <Navbar />
         <main className="ml-56 flex-1 p-6 overflow-y-auto">
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </main>
       </div>
     </>
