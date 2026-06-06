@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import ErrorBoundary from './components/ErrorBoundary';
 import SplashScreen from './components/SplashScreen';
 import ProtectedLayout from './components/ProtectedLayout';
 import Login from './pages/Login';
@@ -13,9 +14,10 @@ import DatabasePortal from './pages/DatabasePortal';
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
+    <ErrorBoundary>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
           {/* Flujo de entrada */}
           <Route path="/" element={<SplashScreen />} />
           <Route path="/login" element={<Login />} />
@@ -33,8 +35,9 @@ export default function App() {
 
           {/* Cualquier otra ruta vuelve al splash */}
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
