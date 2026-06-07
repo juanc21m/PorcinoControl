@@ -13,7 +13,8 @@ import type {
   KPIUpdate,
   MedicalTask,
 } from '../types';
-import { evaluateBiologicalRules, getInventoryAlerts } from '../lib/biologicalEngine';
+import { FEED_TYPES, LB_PER_SACO } from '../types';
+import { evaluateBiologicalRules, getInventoryAlerts, getZoneAlerts } from '../lib/biologicalEngine';
 import {
   fetchAllData,
   insertAnimal,
@@ -113,11 +114,7 @@ interface AppState {
 
 export const useAppStore = create<AppState>((set, get) => ({
   animals: [],
-  inventory: {
-    Crecimiento: { sacos: 0, lb: 0 },
-    Engorde:     { sacos: 0, lb: 0 },
-    Lactancia:   { sacos: 0, lb: 0 },
-  },
+  inventory: Object.fromEntries(FEED_TYPES.map(t => [t, { sacos: 0, lb: 0 }])) as FeedInventory,
   inventoryHistory: [],
   purchases: [],
   sales: [],
@@ -223,25 +220,23 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { purchases, inventory, inventoryHistory } = get();
     const id = crypto.randomUUID();
     const newPurchase: PurchaseInvoice = { ...data, id };
-    const lbPerSaco = 35;
 
-    // Suma los sacos/lb por tipo de alimento a partir de las líneas.
-    const nextInventory: FeedInventory = {
-      Crecimiento: { ...inventory.Crecimiento },
-      Engorde:     { ...inventory.Engorde },
-      Lactancia:   { ...inventory.Lactancia },
-    };
+    // Suma los sacos/lb por tipo de alimento (peso por saco según el tipo).
+    const nextInventory: FeedInventory = Object.fromEntries(
+      FEED_TYPES.map(t => [t, { ...inventory[t] }]),
+    ) as FeedInventory;
     const txs: InventoryTransaction[] = [];
     const touched = new Set<FeedType>();
     for (const item of data.items) {
+      const lb = item.sacosQty * LB_PER_SACO[item.feedType];
       nextInventory[item.feedType] = {
         sacos: nextInventory[item.feedType].sacos + item.sacosQty,
-        lb: nextInventory[item.feedType].lb + item.sacosQty * lbPerSaco,
+        lb: nextInventory[item.feedType].lb + lb,
       };
       touched.add(item.feedType);
       txs.push({
         id: crypto.randomUUID(), date: data.date, feedType: item.feedType,
-        operation: 'Carga', sacos: item.sacosQty, lb: item.sacosQty * lbPerSaco, note: data.invoiceNumber,
+        operation: 'Carga', sacos: item.sacosQty, lb, note: data.invoiceNumber,
       });
     }
 
@@ -323,7 +318,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   loadFeed: (feedType, sacos, note) => {
     const { inventory, inventoryHistory, currentDate } = get();
-    const lb = sacos * 35;
+    const lb = sacos * LB_PER_SACO[feedType];
     const next = { sacos: inventory[feedType].sacos + sacos, lb: inventory[feedType].lb + lb };
     const tx: InventoryTransaction = {
       id: crypto.randomUUID(), date: currentDate, feedType, operation: 'Carga', sacos, lb, note,
@@ -338,7 +333,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   useFeed: (feedType, lb, note) => {
     const { inventory, inventoryHistory, currentDate } = get();
-    const sacosToRemove = Math.floor(lb / 35);
+    const sacosToRemove = Math.floor(lb / LB_PER_SACO[feedType]);
     const next = {
       sacos: Math.max(0, inventory[feedType].sacos - sacosToRemove),
       lb: Math.max(0, inventory[feedType].lb - lb),
@@ -363,9 +358,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       const { alerts: bioAlerts, mutations, kpis, medicalAgenda } = evaluateBiologicalRules(animals, currentDate);
       const invAlerts = getInventoryAlerts(inventory);
+      const zoneAlerts = getZoneAlerts(animals);
 
       const severityRank: Record<string, number> = { critical: 0, warning: 1, info: 2 };
-      const alerts = [...bioAlerts, ...invAlerts]
+      const alerts = [...bioAlerts, ...invAlerts, ...zoneAlerts]
         .filter(a => !dismissedAlertIds.includes(a.id))
         .sort((a, b) => severityRank[a.severity] - severityRank[b.severity]);
       const agenda = medicalAgenda.filter(t => !completedTaskIds.includes(t.id));

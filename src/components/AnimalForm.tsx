@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { X } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
-import { ETAPAS } from '../types';
+import { ETAPAS, ZONE_DEFAULT_FEED, ZONE_ALLOWED_FEEDS } from '../types';
 import type { AnimalRole, FeedType, EtapaProductiva } from '../types';
 
 interface Props {
@@ -31,7 +31,7 @@ export default function AnimalForm({ onClose }: Props) {
     birthDate: '',
     weight: '',
     etapaActual: 'Gestación' as EtapaProductiva,
-    feedType: 'Crecimiento' as FeedType,
+    feedType: ZONE_DEFAULT_FEED['Gestación'] as FeedType,
   });
 
   // ID autogenerado, reactivo al género seleccionado.
@@ -104,9 +104,29 @@ export default function AnimalForm({ onClose }: Props) {
           </div>
           <div>
             <label className="label">Etapa Productiva</label>
-            <select className="input" value={form.etapaActual} onChange={e => setForm({ ...form, etapaActual: e.target.value as EtapaProductiva })}>
+            <select
+              className="input"
+              value={form.etapaActual}
+              onChange={e => {
+                const etapa = e.target.value as EtapaProductiva;
+                setForm({ ...form, etapaActual: etapa, feedType: ZONE_DEFAULT_FEED[etapa] });
+              }}
+            >
               {ETAPAS.map(etapa => <option key={etapa}>{etapa}</option>)}
             </select>
+          </div>
+          <div>
+            <label className="label">Tipo de Alimento</label>
+            {form.etapaActual === 'Destete' ? (
+              <select className="input" value={form.feedType} onChange={e => setForm({ ...form, feedType: e.target.value as FeedType })}>
+                {ZONE_ALLOWED_FEEDS['Destete'].map(f => <option key={f}>{f}</option>)}
+              </select>
+            ) : (
+              <input className="input opacity-80 cursor-not-allowed" value={form.feedType} readOnly disabled />
+            )}
+            <p className="text-gray-500 text-xs mt-1">
+              Asignado por zona{form.etapaActual === 'Destete' ? ' · editable (Fase 1/2/3)' : ''}.
+            </p>
           </div>
           <div className="col-span-2 flex justify-end gap-3 mt-2">
             <button type="button" onClick={onClose} className="btn-secondary">Cancelar</button>

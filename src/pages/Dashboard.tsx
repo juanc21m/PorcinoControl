@@ -9,10 +9,8 @@ import {
 } from 'recharts';
 import { AlertTriangle, AlertCircle, Info, Baby } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
-import { ETAPAS } from '../types';
+import { ETAPAS, FEED_TYPES, LB_PER_SACO } from '../types';
 import type { EtapaProductiva, FeedType, AlertType, AlertSeverity } from '../types';
-
-const LB_PER_SACO = 35;
 
 // ---- Severity styling ----
 const severityStyle: Record<AlertSeverity, { color: string; Icon: typeof AlertTriangle }> = {
@@ -22,7 +20,7 @@ const severityStyle: Record<AlertSeverity, { color: string; Icon: typeof AlertTr
 };
 
 // Columns shown in the horizontal alert board
-const ALERT_COLUMNS: AlertType[] = ['Gestación', 'Maternidad', 'Destete', 'Inventario', 'Reemplazo'];
+const ALERT_COLUMNS: AlertType[] = ['Reemplazo', 'Gestación', 'Maternidad', 'Destete', 'Ceba', 'Inventario'];
 
 type NatalityMode = 'Día' | 'Semana' | 'Mes';
 
@@ -53,7 +51,7 @@ export default function Dashboard() {
   // -------------------------------------------------------------------------
   // 3. Consumo de alimento del día por tipo
   // -------------------------------------------------------------------------
-  const feedTypes: FeedType[] = ['Crecimiento', 'Engorde', 'Lactancia'];
+  const feedTypes = FEED_TYPES;
   const consumedToday = useMemo(() => {
     const map = Object.fromEntries(feedTypes.map(t => [t, 0])) as Record<FeedType, number>;
     for (const tx of inventoryHistory) {
@@ -124,8 +122,8 @@ export default function Dashboard() {
     return grouped;
   }, [alerts]);
 
-  const fmtSacos = (lb: number) => {
-    const sacos = lb / LB_PER_SACO;
+  const fmtSacos = (lb: number, type: FeedType) => {
+    const sacos = lb / LB_PER_SACO[type];
     const rounded = Math.round(sacos * 10) / 10;
     const label = Number.isInteger(rounded) ? rounded.toString() : rounded.toFixed(1);
     return `${label} ${rounded === 1 ? 'saco' : 'sacos'} (${lb.toLocaleString()} lb)`;
@@ -170,11 +168,11 @@ export default function Dashboard() {
       {/* 3. Consumo de alimento del día por tipo */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
         <h3 className="text-white font-semibold mb-4">Alimento Consumido Hoy</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
           {feedTypes.map(type => (
             <div key={type} className="bg-gray-800/40 border border-gray-800 rounded-lg p-4">
               <p className="text-gray-400 text-sm">{type}</p>
-              <p className="text-xl font-bold text-white mt-1">{fmtSacos(consumedToday[type])}</p>
+              <p className="text-base sm:text-lg font-bold text-white mt-1">{fmtSacos(consumedToday[type], type)}</p>
             </div>
           ))}
         </div>
@@ -228,7 +226,7 @@ export default function Dashboard() {
       {/* 5. Alertas por columnas */}
       <div>
         <h3 className="text-white font-semibold mb-3">Alertas Operativas</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
           {ALERT_COLUMNS.map(area => {
             const items = alertsByArea[area];
             return (

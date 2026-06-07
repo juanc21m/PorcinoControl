@@ -2,9 +2,8 @@ import { useMemo, useState } from 'react';
 import { Plus, ShoppingCart, TrendingUp, Calculator, ToggleLeft, ToggleRight, Trash2 } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import PaymentModal from '../components/PaymentModal';
+import { FEED_TYPES, LB_PER_SACO } from '../types';
 import type { FeedType, PaymentInfo, PurchaseItem } from '../types';
-
-const LB_PER_SACO = 35;
 
 interface PayTarget {
   type: 'purchase' | 'sale';
@@ -47,7 +46,7 @@ function PurchaseForm({ onClose }: { onClose: () => void }) {
 
   const subtotal = (row: ItemRow) => (parseFloat(row.sacosQty || '0') || 0) * (parseFloat(row.pricePerSaco || '0') || 0);
   const totalSacos = rows.reduce((acc, r) => acc + (parseInt(r.sacosQty || '0') || 0), 0);
-  const totalLbs = totalSacos * LB_PER_SACO;
+  const totalLbs = rows.reduce((acc, r) => acc + (parseInt(r.sacosQty || '0') || 0) * LB_PER_SACO[r.feedType], 0);
   const totalAmount = rows.reduce((acc, r) => acc + subtotal(r), 0);
 
   function submit(e: React.FormEvent) {
@@ -137,9 +136,7 @@ function PurchaseForm({ onClose }: { onClose: () => void }) {
                           value={row.feedType}
                           onChange={e => updateRow(i, { feedType: e.target.value as FeedType })}
                         >
-                          <option>Crecimiento</option>
-                          <option>Engorde</option>
-                          <option>Lactancia</option>
+                          {FEED_TYPES.map(t => <option key={t}>{t}</option>)}
                         </select>
                       </td>
                       <td className="px-3 py-2">
@@ -149,7 +146,7 @@ function PurchaseForm({ onClose }: { onClose: () => void }) {
                           onChange={e => updateRow(i, { sacosQty: e.target.value })}
                         />
                       </td>
-                      <td className="px-3 py-2 text-gray-400 whitespace-nowrap">35 lb</td>
+                      <td className="px-3 py-2 text-gray-400 whitespace-nowrap">{LB_PER_SACO[row.feedType]} lb</td>
                       <td className="px-3 py-2">
                         <input
                           type="number" step="0.01" min="0" className="input !py-1.5 !w-28" placeholder="25.00"

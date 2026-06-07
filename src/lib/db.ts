@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { FEED_TYPES } from '../types';
 import type {
   Animal,
   Contact,
@@ -232,14 +233,10 @@ function rowToTx(r: Row): InventoryTransaction {
   };
 }
 
-const FEED_TYPES: FeedType[] = ['Crecimiento', 'Engorde', 'Lactancia'];
-
 function rowsToInventory(rows: Row[]): FeedInventory {
-  const inv: FeedInventory = {
-    Crecimiento: { sacos: 0, lb: 0 },
-    Engorde: { sacos: 0, lb: 0 },
-    Lactancia: { sacos: 0, lb: 0 },
-  };
+  const inv = Object.fromEntries(
+    FEED_TYPES.map(t => [t, { sacos: 0, lb: 0 }]),
+  ) as FeedInventory;
   for (const r of rows) {
     const ft = r.feed_type as FeedType;
     if (FEED_TYPES.includes(ft)) inv[ft] = { sacos: Number(r.sacos), lb: Number(r.lb) };

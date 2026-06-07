@@ -1,7 +1,33 @@
 export type AnimalRole = 'Madre' | 'Padrote' | 'Ceba';
 export type AnimalStatus = 'Activo' | 'Despachado' | 'Fallecido' | 'Descarte/Matadero';
 export type HeatStatus = 'En Celo' | 'Inseminada' | 'Embarazada' | 'Lactante' | 'Vacía' | 'Abierta';
-export type FeedType = 'Crecimiento' | 'Engorde' | 'Lactancia';
+export type FeedType =
+  | 'Gestación'
+  | 'Lactancia'
+  | 'Crecimiento'
+  | 'Engorde'
+  | 'Fase 1'
+  | 'Fase 2'
+  | 'Fase 3';
+
+/** Catálogo ordenado de tipos de alimento. */
+export const FEED_TYPES: readonly FeedType[] = [
+  'Gestación', 'Lactancia', 'Crecimiento', 'Engorde', 'Fase 1', 'Fase 2', 'Fase 3',
+] as const;
+
+/**
+ * Libras por saco según el tipo. Fase 1 y Fase 2 vienen en sacos de ~25 kg
+ * (≈55 lb); el resto en sacos de 100 lb.
+ */
+export const LB_PER_SACO: Record<FeedType, number> = {
+  'Gestación': 100,
+  'Lactancia': 100,
+  'Crecimiento': 100,
+  'Engorde': 100,
+  'Fase 1': 55,
+  'Fase 2': 55,
+  'Fase 3': 100,
+};
 
 /**
  * Las 5 etapas productivas del negocio. Sustituyen por completo al antiguo
@@ -17,13 +43,37 @@ export const ETAPAS: readonly EtapaProductiva[] = [
   'Ceba',
 ] as const;
 
-/** Capacidad máxima por etapa (0 = sin límite definido). */
+/**
+ * Capacidad máxima de animales por zona. Valores iniciales sensatos; ajústalos
+ * a tu granja (futura pantalla de configuración los hará editables).
+ */
 export const ETAPA_CAPACITY: Record<EtapaProductiva, number> = {
-  Reemplazo: 0,
-  Gestación: 150,
+  Reemplazo: 30,
+  'Gestación': 150,
   Maternidad: 23,
-  Destete: 0,
-  Ceba: 0,
+  Destete: 200,
+  Ceba: 500,
+};
+
+/** Alimento por defecto que consume cada zona (etapa productiva). */
+export const ZONE_DEFAULT_FEED: Record<EtapaProductiva, FeedType> = {
+  Reemplazo: 'Crecimiento',
+  'Gestación': 'Gestación',
+  Maternidad: 'Lactancia',
+  Destete: 'Fase 1',
+  Ceba: 'Engorde',
+};
+
+/**
+ * Alimentos permitidos por zona (para validar el consumo). Destete admite
+ * Fase 1/2/3; el resto de zonas tiene un único alimento válido.
+ */
+export const ZONE_ALLOWED_FEEDS: Record<EtapaProductiva, FeedType[]> = {
+  Reemplazo: ['Crecimiento'],
+  'Gestación': ['Gestación'],
+  Maternidad: ['Lactancia'],
+  Destete: ['Fase 1', 'Fase 2', 'Fase 3'],
+  Ceba: ['Engorde'],
 };
 
 export interface Animal {
@@ -52,11 +102,7 @@ export interface Animal {
   history: { date: string; event: string }[];
 }
 
-export interface FeedInventory {
-  Crecimiento: { sacos: number; lb: number };
-  Engorde: { sacos: number; lb: number };
-  Lactancia: { sacos: number; lb: number };
-}
+export type FeedInventory = Record<FeedType, { sacos: number; lb: number }>;
 
 // ---------------------------------------------------------------------------
 // Contactos (Clientes / Proveedores)
@@ -93,7 +139,7 @@ export interface PurchaseItem {
   feedType: FeedType;
   sacosQty: number;
   pricePerSaco: number;     // precio por saco
-  // peso por saco fijo = 35 lb; subtotal = sacosQty * pricePerSaco
+  // peso por saco según LB_PER_SACO[feedType]; subtotal = sacosQty * pricePerSaco
 }
 
 export interface PurchaseInvoice {
@@ -105,7 +151,7 @@ export interface PurchaseInvoice {
   time?: string;            // Hora de Entrega (HH:mm)
   items: PurchaseItem[];    // líneas de alimento
   totalSacos: number;       // suma de sacos
-  totalLbs: number;         // totalSacos * 35
+  totalLbs: number;         // suma de sacosQty * LB_PER_SACO[feedType]
   totalAmount: number;      // suma de subtotales
   status: 'Pendiente' | 'Pagado';
   payment?: PaymentInfo;
@@ -133,7 +179,7 @@ export interface SaleInvoice {
 export type AlertSeverity = 'info' | 'warning' | 'critical';
 
 /** Las áreas operativas que agrupan alertas en el Dashboard. */
-export type AlertType = 'Gestación' | 'Maternidad' | 'Destete' | 'Inventario' | 'Reemplazo';
+export type AlertType = 'Gestación' | 'Maternidad' | 'Destete' | 'Inventario' | 'Reemplazo' | 'Ceba';
 
 export interface Alert {
   id: string;

@@ -1,14 +1,22 @@
 import { useState } from 'react';
 import { Package, PlusCircle, MinusCircle, Wheat, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
+import { FEED_TYPES, LB_PER_SACO } from '../types';
 import type { FeedType } from '../types';
 
-const FEED_TYPES: FeedType[] = ['Crecimiento', 'Engorde', 'Lactancia'];
-
 const feedColors: Record<FeedType, { card: string; dot: string }> = {
-  Crecimiento: { card: 'border-blue-700/40 shadow-blue-900/20',   dot: 'bg-blue-500'   },
-  Engorde:     { card: 'border-yellow-700/40 shadow-yellow-900/20', dot: 'bg-yellow-500' },
-  Lactancia:   { card: 'border-purple-700/40 shadow-purple-900/20', dot: 'bg-purple-500' },
+  'Gestación':   { card: 'border-pink-700/40 shadow-pink-900/20',     dot: 'bg-pink-500'    },
+  'Lactancia':   { card: 'border-purple-700/40 shadow-purple-900/20', dot: 'bg-purple-500'  },
+  'Crecimiento': { card: 'border-blue-700/40 shadow-blue-900/20',     dot: 'bg-blue-500'    },
+  'Engorde':     { card: 'border-yellow-700/40 shadow-yellow-900/20', dot: 'bg-yellow-500'  },
+  'Fase 1':      { card: 'border-emerald-700/40 shadow-emerald-900/20', dot: 'bg-emerald-500' },
+  'Fase 2':      { card: 'border-teal-700/40 shadow-teal-900/20',     dot: 'bg-teal-500'    },
+  'Fase 3':      { card: 'border-cyan-700/40 shadow-cyan-900/20',     dot: 'bg-cyan-500'    },
+};
+
+/** Estimación de consumo diario (lb) por tipo, para los "días restantes". */
+const DAILY_LB: Record<FeedType, number> = {
+  'Gestación': 6, 'Lactancia': 12, 'Crecimiento': 8, 'Engorde': 10, 'Fase 1': 2, 'Fase 2': 3, 'Fase 3': 5,
 };
 
 const LOW_STOCK_SACOS = 50;
@@ -38,7 +46,7 @@ export default function Inventory() {
       setUseError(`Stock insuficiente (${inventory[useForm.feedType].sacos} sacos disponibles).`);
       return;
     }
-    useFeed(useForm.feedType, sacos * 35, useForm.note || undefined);
+    useFeed(useForm.feedType, sacos * LB_PER_SACO[useForm.feedType], useForm.note || undefined);
     setUseForm({ feedType: 'Crecimiento', sacos: '', note: '' });
     setUseError('');
   }
@@ -55,7 +63,7 @@ export default function Inventory() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
         {FEED_TYPES.map(type => {
           const data = inventory[type];
           const isLow = data.sacos <= LOW_STOCK_SACOS;
@@ -77,7 +85,7 @@ export default function Inventory() {
               <p className="text-gray-500 text-sm mt-1">sacos</p>
               <div className="mt-3 pt-3 border-t border-gray-800">
                 <p className="text-brand-400 font-semibold">{data.lb.toLocaleString()} lb</p>
-                <p className="text-gray-600 text-xs">35 lb / saco</p>
+                <p className="text-gray-600 text-xs">{LB_PER_SACO[type]} lb / saco</p>
               </div>
             </div>
           );
@@ -104,8 +112,7 @@ export default function Inventory() {
           <tbody>
             {FEED_TYPES.map(type => {
               const data = inventory[type];
-              // rough daily consumption from active animals (static estimate per type)
-              const dailyLb = type === 'Crecimiento' ? 14 : type === 'Engorde' ? 8 : 12;
+              const dailyLb = DAILY_LB[type];
               const daysLeft = dailyLb > 0 ? Math.floor(data.lb / dailyLb) : '∞';
               const isLow = data.sacos <= LOW_STOCK_SACOS;
               return (
@@ -176,7 +183,7 @@ export default function Inventory() {
             </div>
             {loadForm.sacos && (
               <div className="bg-brand-800/10 border border-brand-800/30 rounded-lg px-4 py-2 text-sm text-gray-300">
-                Se agregarán <span className="text-white font-semibold">{parseInt(loadForm.sacos || '0') * 35} lb</span> al inventario de {loadForm.feedType}
+                Se agregarán <span className="text-white font-semibold">{parseInt(loadForm.sacos || '0') * LB_PER_SACO[loadForm.feedType]} lb</span> al inventario de {loadForm.feedType}
               </div>
             )}
             {loadError && <p className="text-red-400 text-xs">{loadError}</p>}
@@ -214,7 +221,7 @@ export default function Inventory() {
             </div>
             {useForm.sacos && (
               <div className="bg-brand-800/10 border border-brand-800/30 rounded-lg px-4 py-2 text-sm text-gray-300">
-                Equivalente: <span className="text-white font-semibold">{parseInt(useForm.sacos || '0') * 35} libras</span>
+                Equivalente: <span className="text-white font-semibold">{parseInt(useForm.sacos || '0') * LB_PER_SACO[useForm.feedType]} libras</span>
               </div>
             )}
             <div>

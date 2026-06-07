@@ -1,8 +1,10 @@
 import { differenceInDays } from 'date-fns';
 import { safeParseISO } from './date';
+import { ETAPAS, ETAPA_CAPACITY, ZONE_ALLOWED_FEEDS } from '../types';
 import type {
   Animal,
   Alert,
+  AlertType,
   Mutation,
   KPIUpdate,
   MedicalTask,
@@ -294,6 +296,56 @@ export function getInventoryAlerts(inventory: FeedInventory): Alert[] {
       });
     }
   });
+  return alerts;
+}
+
+/**
+ * Alertas por zona (etapa productiva):
+ *  - Capacidad: avisa si una zona supera (crítico) o se acerca (≥90%, warning) a
+ *    su capacidad máxima definida en ETAPA_CAPACITY.
+ *  - Consumo: avisa si algún animal activo tiene un tipo de alimento que no
+ *    corresponde a su zona (ZONE_ALLOWED_FEEDS).
+ */
+export function getZoneAlerts(animals: Animal[]): Alert[] {
+  const alerts: Alert[] = [];
+  const active = animals.filter(a => a.status === 'Activo');
+
+  for (const etapa of ETAPAS) {
+    const cap = ETAPA_CAPACITY[etapa];
+    if (cap <= 0) continue;
+    const count = active.filter(a => a.etapaActual === etapa).length;
+    if (count > cap) {
+      alerts.push({
+        id: `cap-${etapa}`,
+        type: etapa as AlertType,
+        severity: 'critical',
+        title: `Capacidad excedida: ${etapa}`,
+        message: `${count}/${cap} animales en ${etapa} (sobrecupo de ${count - cap}).`,
+        action: 'Reubicar o despachar animales',
+      });
+    } else if (count >= Math.ceil(cap * 0.9)) {
+      alerts.push({
+        id: `cap-${etapa}`,
+        type: etapa as AlertType,
+        severity: 'warning',
+        title: `Cerca del límite: ${etapa}`,
+        message: `${count}/${cap} animales en ${etapa} (${Math.round((count / cap) * 100)}% de capacidad).`,
+      });
+    }
+  }
+
+  const mismatched = active.filter(a => !ZONE_ALLOWED_FEEDS[a.etapaActual].includes(a.feedType));
+  if (mismatched.length) {
+    alerts.push({
+      id: 'feed-zone-mismatch',
+      type: 'Inventario',
+      severity: 'warning',
+      title: 'Consumo fuera de zona',
+      message: `${mismatched.length} animal(es) con alimento que no corresponde a su zona: ${mismatched.slice(0, 6).map(a => a.tag).join(', ')}${mismatched.length > 6 ? '…' : ''}.`,
+      action: 'Corregir tipo de alimento',
+    });
+  }
+
   return alerts;
 }
 
