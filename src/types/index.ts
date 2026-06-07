@@ -83,6 +83,7 @@ export interface Animal {
   gender: 'Macho' | 'Hembra';
   breed: string;
   birthDate: string;
+  birthTime?: string;       // hora exacta del nacimiento (HH:mm), opcional
   weight: number;
   etapaActual: EtapaProductiva;
   feedType: FeedType;
@@ -103,6 +104,34 @@ export interface Animal {
 }
 
 export type FeedInventory = Record<FeedType, { sacos: number; lb: number }>;
+
+// ---------------------------------------------------------------------------
+// Insumos generales (jabón, papel, guantes, etc.)
+// ---------------------------------------------------------------------------
+
+export const DEFAULT_SUPPLY_MIN_STOCK = 10;
+
+export interface Supply {
+  id: string;
+  name: string;        // Nombre del insumo
+  brand?: string;      // Marca (opcional)
+  quantity: number;    // Cantidad en stock (entero)
+  minStock: number;    // Umbral de alerta de stock mínimo (editable, default 10)
+}
+
+// ---------------------------------------------------------------------------
+// Semen (pajillas) — registro por lotes de extracción
+// ---------------------------------------------------------------------------
+
+export interface SemenBatch {
+  id: string;
+  padroteId: string;        // ID (UUID) del padrote
+  padroteTag: string;       // tag del padrote (para mostrar sin lookup)
+  date: string;             // fecha de extracción
+  strawsTotal: number;      // pajillas obtenidas en la extracción
+  strawsAvailable: number;  // pajillas disponibles (baja al inseminar)
+  note?: string;
+}
 
 // ---------------------------------------------------------------------------
 // Contactos (Clientes / Proveedores)

@@ -8,6 +8,8 @@ import type {
   FeedInventory,
   FeedType,
   InventoryTransaction,
+  Supply,
+  SemenBatch,
 } from '../types';
 
 /**
@@ -40,6 +42,7 @@ function animalToRow(a: Animal): Row {
     gender: a.gender,
     breed: a.breed,
     birth_date: a.birthDate,
+    birth_time: a.birthTime ?? null,
     weight: a.weight,
     etapa_actual: a.etapaActual,
     feed_type: a.feedType,
@@ -68,6 +71,7 @@ function rowToAnimal(r: Row): Animal {
     gender: r.gender as Animal['gender'],
     breed: r.breed as string,
     birthDate: r.birth_date as string,
+    birthTime: (r.birth_time as string) ?? undefined,
     weight: Number(r.weight),
     etapaActual: r.etapa_actual as Animal['etapaActual'],
     feedType: r.feed_type as FeedType,
@@ -91,7 +95,7 @@ function rowToAnimal(r: Row): Animal {
 /** Mapea un parche parcial de Animal (camelCase) a columnas snake_case. */
 const ANIMAL_COL: Record<string, string> = {
   tag: 'tag', role: 'role', gender: 'gender', breed: 'breed',
-  birthDate: 'birth_date', weight: 'weight', etapaActual: 'etapa_actual',
+  birthDate: 'birth_date', birthTime: 'birth_time', weight: 'weight', etapaActual: 'etapa_actual',
   feedType: 'feed_type', dailyConsumption: 'daily_consumption', status: 'status',
   heatStatus: 'heat_status', lastHeatDate: 'last_heat_date',
   inseminationDate: 'insemination_date', expectedFarrowingDate: 'expected_farrowing_date',
@@ -233,6 +237,52 @@ function rowToTx(r: Row): InventoryTransaction {
   };
 }
 
+// ---- Supply (insumos) ----
+function supplyToRow(s: Supply): Row {
+  return clean({
+    id: s.id,
+    name: s.name,
+    brand: s.brand ?? null,
+    quantity: s.quantity,
+    min_stock: s.minStock,
+  });
+}
+
+function rowToSupply(r: Row): Supply {
+  return {
+    id: r.id as string,
+    name: r.name as string,
+    brand: (r.brand as string) ?? undefined,
+    quantity: Number(r.quantity),
+    minStock: Number(r.min_stock),
+  };
+}
+
+// ---- SemenBatch (pajillas por lote de extracción) ----
+function semenToRow(s: SemenBatch): Row {
+  return clean({
+    id: s.id,
+    padrote_id: s.padroteId,
+    padrote_tag: s.padroteTag,
+    date: s.date,
+    straws_total: s.strawsTotal,
+    straws_available: s.strawsAvailable,
+    note: s.note ?? null,
+  });
+}
+
+function rowToSemen(r: Row): SemenBatch {
+  return {
+    id: r.id as string,
+    padroteId: r.padrote_id as string,
+    padroteTag: r.padrote_tag as string,
+    date: r.date as string,
+    strawsTotal: Number(r.straws_total),
+    strawsAvailable: Number(r.straws_available),
+    note: (r.note as string) ?? undefined,
+  };
+}
+
 function rowsToInventory(rows: Row[]): FeedInventory {
   const inv = Object.fromEntries(
     FEED_TYPES.map(t => [t, { sacos: 0, lb: 0 }]),
@@ -255,21 +305,25 @@ export interface AllData {
   sales: SaleInvoice[];
   inventory: FeedInventory;
   inventoryHistory: InventoryTransaction[];
+  supplies: Supply[];
+  semenBatches: SemenBatch[];
 }
 
 export async function fetchAllData(): Promise<AllData> {
-  const [animalsRes, contactsRes, purchasesRes, salesRes, invRes, txRes] = await Promise.all([
+  const [animalsRes, contactsRes, purchasesRes, salesRes, invRes, txRes, suppliesRes, semenRes] = await Promise.all([
     supabase.from('animals').select('*').order('created_at', { ascending: true }),
     supabase.from('contacts').select('*').order('created_at', { ascending: true }),
     supabase.from('purchase_invoices').select('*').order('date', { ascending: false }),
     supabase.from('sale_invoices').select('*').order('date', { ascending: false }),
     supabase.from('feed_inventory').select('*'),
     supabase.from('inventory_transactions').select('*').order('date', { ascending: false }),
+    supabase.from('supplies').select('*').order('name', { ascending: true }),
+    supabase.from('semen_batches').select('*').order('date', { ascending: false }),
   ]);
 
   const firstError =
     animalsRes.error || contactsRes.error || purchasesRes.error ||
-    salesRes.error || invRes.error || txRes.error;
+    salesRes.error || invRes.error || txRes.error || suppliesRes.error || semenRes.error;
   if (firstError) throw firstError;
 
   return {
@@ -279,6 +333,8 @@ export async function fetchAllData(): Promise<AllData> {
     sales: (salesRes.data ?? []).map(rowToSale),
     inventory: rowsToInventory(invRes.data ?? []),
     inventoryHistory: (txRes.data ?? []).map(rowToTx),
+    supplies: (suppliesRes.data ?? []).map(rowToSupply),
+    semenBatches: (semenRes.data ?? []).map(rowToSemen),
   };
 }
 
@@ -354,5 +410,38 @@ export async function setFeedInventory(feedType: FeedType, sacos: number, lb: nu
     .from('feed_inventory')
     .update({ sacos, lb, updated_at: new Date().toISOString() })
     .eq('feed_type', feedType);
+  if (error) throw error;
+}
+
+// ---- Insumos ----
+export async function insertSupply(s: Supply): Promise<void> {
+  const { error } = await supabase.from('supplies').insert(supplyToRow(s));
+  if (error) throw error;
+}
+
+export async function updateSupply(id: string, changes: Partial<Supply>): Promise<void> {
+  const row: Row = {};
+  if ('name' in changes) row.name = changes.name;
+  if ('brand' in changes) row.brand = changes.brand ?? null;
+  if ('quantity' in changes) row.quantity = changes.quantity;
+  if ('minStock' in changes) row.min_stock = changes.minStock;
+  if (!Object.keys(row).length) return;
+  const { error } = await supabase.from('supplies').update(row).eq('id', id);
+  if (error) throw error;
+}
+
+// ---- Semen ----
+export async function insertSemenBatch(b: SemenBatch): Promise<void> {
+  const { error } = await supabase.from('semen_batches').insert(semenToRow(b));
+  if (error) throw error;
+}
+
+export async function updateSemenBatch(id: string, changes: Partial<SemenBatch>): Promise<void> {
+  const row: Row = {};
+  if ('strawsAvailable' in changes) row.straws_available = changes.strawsAvailable;
+  if ('strawsTotal' in changes) row.straws_total = changes.strawsTotal;
+  if ('note' in changes) row.note = changes.note ?? null;
+  if (!Object.keys(row).length) return;
+  const { error } = await supabase.from('semen_batches').update(row).eq('id', id);
   if (error) throw error;
 }

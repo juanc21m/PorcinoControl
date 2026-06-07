@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { addDays, format } from 'date-fns';
 import type {
   Animal,
   FeedInventory,
@@ -12,8 +13,11 @@ import type {
   Alert,
   KPIUpdate,
   MedicalTask,
+  Supply,
+  SemenBatch,
 } from '../types';
-import { FEED_TYPES, LB_PER_SACO } from '../types';
+import { FEED_TYPES, LB_PER_SACO, ZONE_DEFAULT_FEED, DEFAULT_SUPPLY_MIN_STOCK } from '../types';
+import { safeParseISO } from '../lib/date';
 import { evaluateBiologicalRules, getInventoryAlerts, getZoneAlerts } from '../lib/biologicalEngine';
 import {
   fetchAllData,
@@ -28,6 +32,10 @@ import {
   insertInventoryTx,
   insertInventoryTxs,
   setFeedInventory,
+  insertSupply,
+  updateSupply as dbUpdateSupply,
+  insertSemenBatch,
+  updateSemenBatch,
 } from '../lib/db';
 
 // ---------------------------------------------------------------------------
@@ -66,6 +74,8 @@ interface AppState {
   purchases: PurchaseInvoice[];
   sales: SaleInvoice[];
   contacts: Contact[];
+  supplies: Supply[];
+  semenBatches: SemenBatch[];
   currentDate: string;
   dismissedAlertIds: string[];
   completedTaskIds: string[];
@@ -85,8 +95,23 @@ interface AppState {
 
   // Animal actions
   addAnimal: (data: Omit<Animal, 'id' | 'tag' | 'weights' | 'vaccinations' | 'history'>) => void;
-  registerFarrowing: (motherId: string, pigletCount: number, avgWeight: number) => void;
+  registerFarrowing: (
+    motherId: string,
+    pigletCount: number,
+    avgWeight: number,
+    opts?: { padroteId?: string; date?: string; time?: string },
+  ) => void;
   updateAnimalStatus: (id: string, status: Animal['status']) => void;
+  /** Inseminación: descuenta 1 pajilla del padrote y marca a la hembra Inseminada. */
+  inseminate: (femaleId: string, padroteId: string) => void;
+
+  // Insumos
+  addSupply: (data: Omit<Supply, 'id'>) => void;
+  updateSupply: (id: string, changes: Partial<Omit<Supply, 'id'>>) => void;
+  adjustSupply: (id: string, delta: number) => void;
+
+  // Semen
+  addSemenBatch: (data: Omit<SemenBatch, 'id' | 'strawsAvailable'>) => void;
 
   // Finance actions
   addPurchase: (data: Omit<PurchaseInvoice, 'id'>) => void;
@@ -119,6 +144,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   purchases: [],
   sales: [],
   contacts: [],
+  supplies: [],
+  semenBatches: [],
   currentDate: CURRENT_DATE,
   dismissedAlertIds: [],
   completedTaskIds: [],
@@ -143,6 +170,8 @@ export const useAppStore = create<AppState>((set, get) => ({
         sales: data.sales,
         inventory: data.inventory,
         inventoryHistory: data.inventoryHistory,
+        supplies: data.supplies,
+        semenBatches: data.semenBatches,
         loaded: true,
         loading: false,
       });
@@ -173,10 +202,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     persist(insertAnimal(newAnimal), 'insertAnimal');
   },
 
-  registerFarrowing: (motherId, pigletCount, avgWeight) => {
+  registerFarrowing: (motherId, pigletCount, avgWeight, opts) => {
     const { animals, currentDate } = get();
-    const today = currentDate;
     const mother = animals.find(a => a.id === motherId);
+    const date = opts?.date ?? currentDate;
+    const time = opts?.time;
+    const padroteId = opts?.padroteId ?? mother?.padrote_id;
+    const when = time ? `${date} ${time}` : date;
 
     let motherChanges: Partial<Animal> | null = null;
     const updatedAnimals = animals.map(a => {
@@ -186,11 +218,12 @@ export const useAppStore = create<AppState>((set, get) => ({
         feedType: 'Lactancia' as FeedType,
         dailyConsumption: 12,
         etapaActual: 'Maternidad' as const,
-        lastFarrowingDate: today,
+        padrote_id: padroteId,
+        lastFarrowingDate: date,
         totalFarrowings: (a.totalFarrowings ?? 0) + 1,
         history: [
           ...a.history,
-          { date: today, event: `Parto registrado: ${pigletCount} lechones, peso prom. ${avgWeight} lb` },
+          { date, event: `Parto registrado (${when}): ${pigletCount} lechones, peso prom. ${avgWeight} lb` },
         ],
       };
       return { ...a, ...motherChanges };
@@ -202,7 +235,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         [...updatedAnimals, ...Array.from({ length: i }, (__, j) => ({ tag: `${j % 2 === 0 ? 'M' : 'H'}-999999` } as Animal))],
         prefix
       );
-      return mkPigletStub(tag, i % 2 === 0 ? 'Macho' : 'Hembra', today, avgWeight, motherId, mother?.padrote_id);
+      return mkPigletStub(tag, i % 2 === 0 ? 'Macho' : 'Hembra', date, time, avgWeight, motherId, padroteId);
     });
 
     set({ animals: [...updatedAnimals, ...newPiglets] });
@@ -214,6 +247,73 @@ export const useAppStore = create<AppState>((set, get) => ({
   updateAnimalStatus: (id, status) => {
     set({ animals: get().animals.map(a => (a.id === id ? { ...a, status } : a)) });
     persist(updateAnimal(id, { status }), 'updateAnimalStatus');
+  },
+
+  inseminate: (femaleId, padroteId) => {
+    const { animals, semenBatches, currentDate } = get();
+    const female = animals.find(a => a.id === femaleId);
+    const padrote = animals.find(a => a.id === padroteId);
+    if (!female || !padrote) return;
+
+    // Pajilla disponible más antigua de ese padrote (FIFO).
+    const batch = semenBatches
+      .filter(b => b.padroteId === padroteId && b.strawsAvailable > 0)
+      .sort((a, b) => a.date.localeCompare(b.date))[0];
+    if (!batch) return; // sin stock de pajillas: la UI debe impedir llegar aquí
+
+    const expected = format(addDays(safeParseISO(currentDate), 114), 'yyyy-MM-dd');
+    const femaleChanges: Partial<Animal> = {
+      heatStatus: 'Inseminada',
+      inseminationDate: currentDate,
+      expectedFarrowingDate: expected,
+      padrote_id: padroteId,
+      etapaActual: 'Gestación',
+      feedType: ZONE_DEFAULT_FEED['Gestación'],
+    };
+
+    set({
+      semenBatches: semenBatches.map(b =>
+        b.id === batch.id ? { ...b, strawsAvailable: b.strawsAvailable - 1 } : b,
+      ),
+      animals: animals.map(a =>
+        a.id === femaleId
+          ? { ...a, ...femaleChanges, history: [...a.history, { date: currentDate, event: `Inseminada con semen de ${padrote.tag} (parto estimado ${expected}).` }] }
+          : a,
+      ),
+    });
+
+    persist(updateSemenBatch(batch.id, { strawsAvailable: batch.strawsAvailable - 1 }), 'inseminate(pajilla)');
+    const f = get().animals.find(a => a.id === femaleId);
+    persist(updateAnimal(femaleId, { ...femaleChanges, history: f?.history }), 'inseminate(hembra)');
+  },
+
+  addSupply: (data) => {
+    const newSupply: Supply = {
+      ...data,
+      id: crypto.randomUUID(),
+      minStock: data.minStock || DEFAULT_SUPPLY_MIN_STOCK,
+    };
+    set({ supplies: [...get().supplies, newSupply] });
+    persist(insertSupply(newSupply), 'insertSupply');
+  },
+
+  updateSupply: (id, changes) => {
+    set({ supplies: get().supplies.map(s => (s.id === id ? { ...s, ...changes } : s)) });
+    persist(dbUpdateSupply(id, changes), 'updateSupply');
+  },
+
+  adjustSupply: (id, delta) => {
+    const supply = get().supplies.find(s => s.id === id);
+    if (!supply) return;
+    const quantity = Math.max(0, supply.quantity + delta);
+    set({ supplies: get().supplies.map(s => (s.id === id ? { ...s, quantity } : s)) });
+    persist(dbUpdateSupply(id, { quantity }), 'adjustSupply');
+  },
+
+  addSemenBatch: (data) => {
+    const newBatch: SemenBatch = { ...data, id: crypto.randomUUID(), strawsAvailable: data.strawsTotal };
+    set({ semenBatches: [newBatch, ...get().semenBatches] });
+    persist(insertSemenBatch(newBatch), 'insertSemenBatch');
   },
 
   addPurchase: (data) => {
@@ -459,7 +559,8 @@ export const useAppStore = create<AppState>((set, get) => ({
 function mkPigletStub(
   tag: string,
   gender: 'Macho' | 'Hembra',
-  today: string,
+  date: string,
+  time: string | undefined,
   avgWeight: number,
   motherId: string,
   padroteId?: string
@@ -470,7 +571,8 @@ function mkPigletStub(
     role: 'Ceba',
     gender,
     breed: 'Pietrain',
-    birthDate: today,
+    birthDate: date,
+    birthTime: time,
     weight: avgWeight,
     etapaActual: 'Maternidad',
     feedType: 'Crecimiento',
@@ -478,8 +580,8 @@ function mkPigletStub(
     status: 'Activo',
     madre_id: motherId,
     padrote_id: padroteId,
-    weights: [{ date: today, weight: avgWeight }],
+    weights: [{ date, weight: avgWeight }],
     vaccinations: [],
-    history: [{ date: today, event: 'Nacimiento registrado' }],
+    history: [{ date, event: `Nacimiento registrado${time ? ` (${date} ${time})` : ''}` }],
   };
 }

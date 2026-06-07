@@ -8,6 +8,8 @@ import Dashboard from './pages/Dashboard';
 import Traceability from './pages/Traceability';
 import Etapas from './pages/Etapas';
 import Inventory from './pages/Inventory';
+import Supplies from './pages/Supplies';
+import Semen from './pages/Semen';
 import Finances from './pages/Finances';
 import Contacts from './pages/Contacts';
 import DatabasePortal from './pages/DatabasePortal';
@@ -28,6 +30,8 @@ export default function App() {
             <Route path="/traceability" element={<Traceability />} />
             <Route path="/etapas" element={<Etapas />} />
             <Route path="/inventory" element={<Inventory />} />
+            <Route path="/supplies" element={<Supplies />} />
+            <Route path="/semen" element={<Semen />} />
             <Route path="/finances" element={<Finances />} />
             <Route path="/contacts" element={<Contacts />} />
             <Route path="/portal" element={<DatabasePortal />} />

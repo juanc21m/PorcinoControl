@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, GitBranch, DollarSign, Database, PiggyBank, Package, Workflow, Contact, LogOut, X } from 'lucide-react';
+import { LayoutDashboard, GitBranch, DollarSign, Database, PiggyBank, Package, Workflow, Contact, LogOut, X, Boxes, TestTube } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const links = [
@@ -7,6 +7,8 @@ const links = [
   { to: '/traceability',label: 'Trazabilidad',   icon: GitBranch },
   { to: '/etapas',      label: 'Etapas',          icon: Workflow },
   { to: '/inventory',   label: 'Inventario',      icon: Package },
+  { to: '/supplies',    label: 'Insumos',         icon: Boxes },
+  { to: '/semen',       label: 'Semen',           icon: TestTube },
   { to: '/finances',    label: 'Finanzas',        icon: DollarSign },
   { to: '/contacts',    label: 'Contactos',       icon: Contact },
   { to: '/portal',      label: 'DB Portal',       icon: Database },
