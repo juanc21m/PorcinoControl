@@ -143,11 +143,11 @@ export default function Dashboard() {
         <h3 className="text-white font-semibold mb-3">Inventario de Animales</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           {ETAPAS.map(etapa => (
-            <div key={etapa} className="bg-gray-900 border border-gray-800 rounded-xl p-5 flex flex-col items-center justify-center text-center">
-              <span className="font-bold leading-none" style={{ fontSize: '64px', color: '#4CAF50' }}>
+            <div key={etapa} className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5 flex flex-col items-center justify-center text-center">
+              <span className="font-bold leading-none text-4xl sm:text-5xl lg:text-6xl" style={{ color: '#4CAF50' }}>
                 {etapaCounts[etapa]}
               </span>
-              <span className="text-gray-300 text-sm mt-2">{etapa}</span>
+              <span className="text-gray-300 text-xs sm:text-sm mt-2">{etapa}</span>
             </div>
           ))}
         </div>
@@ -156,7 +156,7 @@ export default function Dashboard() {
       {/* 2. Inventario de alimentos */}
       <div>
         <h3 className="text-white font-semibold mb-3">Inventario de Alimentos</h3>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
           {(Object.entries(inventory) as [string, { sacos: number; lb: number }][]).map(([type, data]) => (
             <div key={type} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
               <p className="text-gray-400 text-sm">{type}</p>

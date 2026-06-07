@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
+import { Menu, PiggyBank } from 'lucide-react';
 import Navbar from './Navbar';
 import ErrorBoundary from './ErrorBoundary';
 import { useAppStore } from '../store/appStore';
@@ -43,6 +44,7 @@ function DataLoader() {
  */
 export default function ProtectedLayout() {
   const { isAuthenticated, loading } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Mientras Supabase restaura la sesión persistida, esperar (evita un rebote
   // al /login en cada recarga antes de saber si hay sesión válida).
@@ -60,9 +62,38 @@ export default function ProtectedLayout() {
     <>
       <DataLoader />
       <BiologicalDaemon />
-      <div className="flex min-h-screen bg-gray-950">
-        <Navbar />
-        <main className="ml-56 flex-1 p-6 overflow-y-auto">
+      <div className="min-h-screen bg-gray-950">
+        {/* Sidebar: fija en escritorio, drawer deslizable en móvil */}
+        <Navbar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+        {/* Overlay oscuro detrás del drawer en móvil */}
+        {sidebarOpen && (
+          <div
+            onClick={() => setSidebarOpen(false)}
+            aria-hidden="true"
+            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          />
+        )}
+
+        {/* Barra superior móvil con botón hamburguesa */}
+        <header className="md:hidden sticky top-0 z-30 flex items-center gap-3 h-14 px-4 bg-gray-900 border-b border-gray-800">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Abrir menú"
+            className="text-gray-300 hover:text-white -ml-1 p-1"
+          >
+            <Menu size={24} />
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-full bg-brand-800 flex items-center justify-center">
+              <PiggyBank size={16} className="text-white" />
+            </div>
+            <span className="text-white font-bold tracking-tight">PorciControl</span>
+          </div>
+        </header>
+
+        {/* Contenido. min-w-0 evita que tablas/gráficas fuercen scroll horizontal. */}
+        <main className="md:ml-56 min-w-0 p-4 sm:p-6 overflow-x-hidden">
           <ErrorBoundary>
             <Outlet />
           </ErrorBoundary>
