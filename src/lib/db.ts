@@ -353,6 +353,23 @@ export async function insertAnimals(animals: Animal[]): Promise<void> {
   if (error) throw error;
 }
 
+/** Importación masiva: inserta o actualiza (por id) en un solo round-trip. */
+export async function upsertAnimals(animals: Animal[]): Promise<void> {
+  if (!animals.length) return;
+  const { error } = await supabase.from('animals').upsert(animals.map(animalToRow), { onConflict: 'id' });
+  if (error) throw error;
+}
+
+/** Importación masiva de inventario (upsert por feed_type). */
+export async function upsertInventoryRows(rows: { feedType: FeedType; sacos: number; lb: number }[]): Promise<void> {
+  if (!rows.length) return;
+  const now = new Date().toISOString();
+  const { error } = await supabase
+    .from('feed_inventory')
+    .upsert(rows.map(r => ({ feed_type: r.feedType, sacos: r.sacos, lb: r.lb, updated_at: now })), { onConflict: 'feed_type' });
+  if (error) throw error;
+}
+
 export async function updateAnimal(id: string, changes: Partial<Animal>): Promise<void> {
   const row = animalChangesToRow(changes);
   if (!Object.keys(row).length) return;

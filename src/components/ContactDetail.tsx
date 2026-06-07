@@ -55,10 +55,12 @@ export default function ContactDetail({ contact, onClose }: Props) {
         <div>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-white font-semibold text-sm flex items-center gap-2">
-              <FileText size={15} className="text-brand-400" /> Facturas
+              <FileText size={15} className="text-brand-400" /> Estado de Cuenta
             </h3>
             {totalPending > 0 && (
-              <span className="text-xs text-yellow-400">Pendiente: ${totalPending.toLocaleString()}</span>
+              <span className="text-xs text-yellow-400">
+                {contact.type === 'Cliente' ? 'Total a Cobrar' : 'Total a Pagar'}: ${totalPending.toLocaleString()}
+              </span>
             )}
           </div>
           {invoices.length === 0 ? (

@@ -298,6 +298,8 @@ export default function Finances() {
   const totalBilled = useMemo(() => sales.reduce((s, i) => s + i.totalAmount, 0), [sales]);
   const totalCollected = useMemo(() => sales.filter(s => s.status === 'Pagado').reduce((s, i) => s + i.totalAmount, 0), [sales]);
   const totalSpent = useMemo(() => purchases.reduce((s, p) => s + p.totalAmount, 0), [purchases]);
+  const totalToCollect = useMemo(() => sales.filter(s => s.status === 'Pendiente').reduce((s, i) => s + i.totalAmount, 0), [sales]);
+  const totalToPay = useMemo(() => purchases.filter(p => p.status === 'Pendiente').reduce((s, p) => s + p.totalAmount, 0), [purchases]);
   const deviation = totalBilled > 0 ? ((totalBilled - totalCollected) / totalBilled) * 100 : 0;
 
   return (
@@ -427,6 +429,20 @@ export default function Finances() {
       {/* Tab: Cash Flow */}
       {tab === 'cashflow' && (
         <div className="space-y-4">
+          {/* Totales a cobrar / a pagar */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-gray-900 border border-yellow-700/40 rounded-xl p-5">
+              <p className="text-gray-400 text-sm mb-1">Total a Cobrar (Clientes)</p>
+              <p className="text-3xl font-bold text-yellow-400">${totalToCollect.toLocaleString()}</p>
+              <p className="text-gray-600 text-xs mt-1">Facturas de venta pendientes</p>
+            </div>
+            <div className="bg-gray-900 border border-red-700/40 rounded-xl p-5">
+              <p className="text-gray-400 text-sm mb-1">Total a Pagar (Proveedores)</p>
+              <p className="text-3xl font-bold text-red-400">${totalToPay.toLocaleString()}</p>
+              <p className="text-gray-600 text-xs mt-1">Facturas de compra pendientes</p>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               { label: 'Total Facturado (Ventas)', value: `$${totalBilled.toLocaleString()}`, color: 'text-white' },

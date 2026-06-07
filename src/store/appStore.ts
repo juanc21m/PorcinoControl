@@ -23,6 +23,8 @@ import {
   fetchAllData,
   insertAnimal,
   insertAnimals,
+  upsertAnimals,
+  upsertInventoryRows,
   updateAnimal,
   deleteAnimal as dbDeleteAnimal,
   insertContact,
@@ -118,6 +120,10 @@ interface AppState {
   setAnimalWeights: (id: string, weights: Animal['weights']) => void;
   /** Borrado físico de un animal creado por error. */
   deleteAnimal: (id: string) => void;
+  /** Importación masiva de animales (upsert por id). */
+  importAnimals: (animals: Animal[]) => void;
+  /** Importación masiva de inventario de alimentos (upsert por tipo). */
+  importInventory: (rows: { feedType: FeedType; sacos: number; lb: number }[]) => void;
   /** Inseminación: descuenta 1 pajilla del padrote y marca a la hembra Inseminada. */
   inseminate: (femaleId: string, padroteId: string) => void;
 
@@ -293,6 +299,28 @@ export const useAppStore = create<AppState>((set, get) => ({
   deleteAnimal: (id) => {
     set({ animals: get().animals.filter(a => a.id !== id) });
     persist(dbDeleteAnimal(id), 'deleteAnimal');
+  },
+
+  importAnimals: (incoming) => {
+    if (!incoming.length) return;
+    const existing = new Map(get().animals.map(a => [a.id, a]));
+    // Para animales ya existentes, preserva su historial (pesos/vacunas/eventos);
+    // así re-subir un CSV exportado no destruye datos anidados que el CSV no lleva.
+    const merged = incoming.map(a => {
+      const prev = existing.get(a.id);
+      return prev ? { ...a, weights: prev.weights, vaccinations: prev.vaccinations, history: prev.history } : a;
+    });
+    const byId = new Map(existing);
+    for (const a of merged) byId.set(a.id, a);
+    set({ animals: [...byId.values()] });
+    persist(upsertAnimals(merged), 'importAnimals');
+  },
+
+  importInventory: (rows) => {
+    const inv: FeedInventory = { ...get().inventory };
+    for (const r of rows) inv[r.feedType] = { sacos: r.sacos, lb: r.lb };
+    set({ inventory: inv });
+    persist(upsertInventoryRows(rows), 'importInventory');
   },
 
   inseminate: (femaleId, padroteId) => {

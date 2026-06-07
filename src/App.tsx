@@ -12,6 +12,7 @@ import Supplies from './pages/Supplies';
 import Semen from './pages/Semen';
 import Finances from './pages/Finances';
 import Contacts from './pages/Contacts';
+import Reports from './pages/Reports';
 import DatabasePortal from './pages/DatabasePortal';
 
 export default function App() {
@@ -34,6 +35,7 @@ export default function App() {
             <Route path="/semen" element={<Semen />} />
             <Route path="/finances" element={<Finances />} />
             <Route path="/contacts" element={<Contacts />} />
+            <Route path="/reports" element={<Reports />} />
             <Route path="/portal" element={<DatabasePortal />} />
           </Route>
 
