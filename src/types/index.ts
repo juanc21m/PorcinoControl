@@ -111,6 +111,12 @@ export type FeedInventory = Record<FeedType, { sacos: number; lb: number }>;
 
 export const DEFAULT_SUPPLY_MIN_STOCK = 10;
 
+/**
+ * Límite de partos en la vida útil de una cerda. Al alcanzarlo, el perfil
+ * muestra una alerta visual. Editable (futura pantalla de configuración).
+ */
+export const LIFETIME_FARROWING_LIMIT = 10;
+
 export interface Supply {
   id: string;
   name: string;        // Nombre del insumo

@@ -360,6 +360,12 @@ export async function updateAnimal(id: string, changes: Partial<Animal>): Promis
   if (error) throw error;
 }
 
+/** Borrado físico de un animal (creado por error). */
+export async function deleteAnimal(id: string): Promise<void> {
+  const { error } = await supabase.from('animals').delete().eq('id', id);
+  if (error) throw error;
+}
+
 export async function insertContact(c: Contact): Promise<void> {
   const { error } = await supabase.from('contacts').insert(contactToRow(c));
   if (error) throw error;

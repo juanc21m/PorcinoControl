@@ -24,6 +24,7 @@ import {
   insertAnimal,
   insertAnimals,
   updateAnimal,
+  deleteAnimal as dbDeleteAnimal,
   insertContact,
   insertPurchase,
   insertSale,
@@ -102,6 +103,12 @@ interface AppState {
     opts?: { padroteId?: string; date?: string; time?: string },
   ) => void;
   updateAnimalStatus: (id: string, status: Animal['status']) => void;
+  /** Edita campos del perfil (raza, nacimiento, peso). El ID/tag es inmutable. */
+  editAnimal: (id: string, changes: Partial<Pick<Animal, 'breed' | 'birthDate' | 'birthTime' | 'weight'>>) => void;
+  /** Reemplaza el historial de pesajes (y sincroniza el peso actual con el último). */
+  setAnimalWeights: (id: string, weights: Animal['weights']) => void;
+  /** Borrado físico de un animal creado por error. */
+  deleteAnimal: (id: string) => void;
   /** Inseminación: descuenta 1 pajilla del padrote y marca a la hembra Inseminada. */
   inseminate: (femaleId: string, padroteId: string) => void;
 
@@ -247,6 +254,28 @@ export const useAppStore = create<AppState>((set, get) => ({
   updateAnimalStatus: (id, status) => {
     set({ animals: get().animals.map(a => (a.id === id ? { ...a, status } : a)) });
     persist(updateAnimal(id, { status }), 'updateAnimalStatus');
+  },
+
+  editAnimal: (id, changes) => {
+    // El tag/id nunca se tocan: `changes` está acotado por tipo a campos editables.
+    set({ animals: get().animals.map(a => (a.id === id ? { ...a, ...changes } : a)) });
+    persist(updateAnimal(id, changes), 'editAnimal');
+  },
+
+  setAnimalWeights: (id, weights) => {
+    const sorted = [...weights].sort((a, b) => a.date.localeCompare(b.date));
+    const latest = sorted.length ? sorted[sorted.length - 1].weight : undefined;
+    set({
+      animals: get().animals.map(a =>
+        a.id === id ? { ...a, weights: sorted, ...(latest !== undefined ? { weight: latest } : {}) } : a,
+      ),
+    });
+    persist(updateAnimal(id, { weights: sorted, ...(latest !== undefined ? { weight: latest } : {}) }), 'setAnimalWeights');
+  },
+
+  deleteAnimal: (id) => {
+    set({ animals: get().animals.filter(a => a.id !== id) });
+    persist(dbDeleteAnimal(id), 'deleteAnimal');
   },
 
   inseminate: (femaleId, padroteId) => {
