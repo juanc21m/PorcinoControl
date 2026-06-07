@@ -50,13 +50,16 @@ const CURRENT_DATE = '2026-05-30';
 // Helpers
 // ---------------------------------------------------------------------------
 
-function getNextTag(animals: Animal[], prefix: 'M' | 'H'): string {
+function nextTagNumber(animals: Animal[], prefix: 'M' | 'H'): number {
   const nums = animals
     .filter(a => a.tag.startsWith(prefix + '-'))
     .map(a => parseInt(a.tag.slice(2), 10))
     .filter(n => !isNaN(n));
-  const max = nums.length ? Math.max(...nums) : 0;
-  return `${prefix}-${String(max + 1).padStart(6, '0')}`;
+  return (nums.length ? Math.max(...nums) : 0) + 1;
+}
+
+function getNextTag(animals: Animal[], prefix: 'M' | 'H'): string {
+  return `${prefix}-${String(nextTagNumber(animals, prefix)).padStart(6, '0')}`;
 }
 
 /** Dispara una escritura a Supabase sin bloquear la UI; loguea errores. */
@@ -98,9 +101,15 @@ interface AppState {
   addAnimal: (data: Omit<Animal, 'id' | 'tag' | 'weights' | 'vaccinations' | 'history'>) => void;
   registerFarrowing: (
     motherId: string,
-    pigletCount: number,
-    avgWeight: number,
-    opts?: { padroteId?: string; date?: string; time?: string },
+    data: {
+      males: number;
+      females: number;
+      avgWeight: number;
+      breed?: string;
+      padroteId?: string;
+      date?: string;
+      time?: string;
+    },
   ) => void;
   updateAnimalStatus: (id: string, status: Animal['status']) => void;
   /** Edita campos del perfil (raza, nacimiento, peso). El ID/tag es inmutable. */
@@ -209,12 +218,15 @@ export const useAppStore = create<AppState>((set, get) => ({
     persist(insertAnimal(newAnimal), 'insertAnimal');
   },
 
-  registerFarrowing: (motherId, pigletCount, avgWeight, opts) => {
+  registerFarrowing: (motherId, data) => {
     const { animals, currentDate } = get();
     const mother = animals.find(a => a.id === motherId);
-    const date = opts?.date ?? currentDate;
-    const time = opts?.time;
-    const padroteId = opts?.padroteId ?? mother?.padrote_id;
+    const { males, females, avgWeight } = data;
+    const date = data.date ?? currentDate;
+    const time = data.time;
+    const padroteId = data.padroteId ?? mother?.padrote_id;
+    const litterBreed = data.breed || mother?.breed || 'Pietrain';
+    const total = males + females;
     const when = time ? `${date} ${time}` : date;
 
     let motherChanges: Partial<Animal> | null = null;
@@ -230,19 +242,24 @@ export const useAppStore = create<AppState>((set, get) => ({
         totalFarrowings: (a.totalFarrowings ?? 0) + 1,
         history: [
           ...a.history,
-          { date, event: `Parto registrado (${when}): ${pigletCount} lechones, peso prom. ${avgWeight} lb` },
+          { date, event: `Parto registrado (${when}): ${total} lechones (${males}M / ${females}H), peso prom. ${avgWeight} lb` },
         ],
       };
       return { ...a, ...motherChanges };
     });
 
-    const newPiglets: Animal[] = Array.from({ length: pigletCount }, (_, i) => {
-      const prefix: 'M' | 'H' = i % 2 === 0 ? 'M' : 'H';
-      const tag = getNextTag(
-        [...updatedAnimals, ...Array.from({ length: i }, (__, j) => ({ tag: `${j % 2 === 0 ? 'M' : 'H'}-999999` } as Animal))],
-        prefix
-      );
-      return mkPigletStub(tag, i % 2 === 0 ? 'Macho' : 'Hembra', date, time, avgWeight, motherId, padroteId);
+    // IDs correlativos globales por género (M-/H-), reservando números por lote.
+    let mNum = nextTagNumber(animals, 'M');
+    let hNum = nextTagNumber(animals, 'H');
+    const genders: ('Macho' | 'Hembra')[] = [
+      ...Array<'Macho'>(males).fill('Macho'),
+      ...Array<'Hembra'>(females).fill('Hembra'),
+    ];
+    const newPiglets: Animal[] = genders.map(gender => {
+      const tag = gender === 'Macho'
+        ? `M-${String(mNum++).padStart(6, '0')}`
+        : `H-${String(hNum++).padStart(6, '0')}`;
+      return mkPigletStub(tag, gender, date, time, avgWeight, motherId, padroteId, litterBreed);
     });
 
     set({ animals: [...updatedAnimals, ...newPiglets] });
@@ -592,14 +609,15 @@ function mkPigletStub(
   time: string | undefined,
   avgWeight: number,
   motherId: string,
-  padroteId?: string
+  padroteId: string | undefined,
+  breed: string,
 ): Animal {
   return {
     id: crypto.randomUUID(),
     tag,
     role: 'Ceba',
     gender,
-    breed: 'Pietrain',
+    breed,
     birthDate: date,
     birthTime: time,
     weight: avgWeight,

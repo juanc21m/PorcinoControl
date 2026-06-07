@@ -26,7 +26,8 @@ function FarrowingModal({ mother, onClose }: { mother: Animal; onClose: () => vo
   const currentDate = useAppStore(s => s.currentDate);
   const padrotes = animals.filter(a => a.status === 'Activo' && (a.role === 'Padrote' || a.gender === 'Macho'));
 
-  const [count, setCount] = useState('');
+  const [males, setMales] = useState('');
+  const [females, setFemales] = useState('');
   const [avgW, setAvgW] = useState('');
   const [padroteId, setPadroteId] = useState(mother.padrote_id ?? '');
   const [date, setDate] = useState(currentDate);
@@ -34,7 +35,10 @@ function FarrowingModal({ mother, onClose }: { mother: Animal; onClose: () => vo
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    registerFarrowing(mother.id, parseInt(count), parseFloat(avgW), {
+    registerFarrowing(mother.id, {
+      males: parseInt(males) || 0,
+      females: parseInt(females) || 0,
+      avgWeight: parseFloat(avgW),
       padroteId: padroteId || undefined,
       date,
       time: time || undefined,
@@ -60,13 +64,17 @@ function FarrowingModal({ mother, onClose }: { mother: Animal; onClose: () => vo
               </select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="label">Cantidad de Lechones</label>
-              <input type="number" min={1} className="input" placeholder="10" value={count} onChange={e => setCount(e.target.value)} required />
+              <label className="label">Machos</label>
+              <input type="number" min={0} className="input" placeholder="0" value={males} onChange={e => setMales(e.target.value)} />
             </div>
             <div>
-              <label className="label">Peso Inicial Prom. (lb)</label>
+              <label className="label">Hembras</label>
+              <input type="number" min={0} className="input" placeholder="0" value={females} onChange={e => setFemales(e.target.value)} />
+            </div>
+            <div>
+              <label className="label">Peso Prom. (lb)</label>
               <input type="number" step="0.1" min={0} className="input" placeholder="3.2" value={avgW} onChange={e => setAvgW(e.target.value)} required />
             </div>
           </div>

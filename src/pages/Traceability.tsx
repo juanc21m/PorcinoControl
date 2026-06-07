@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Plus, Search, Eye, Filter } from 'lucide-react';
+import { Baby, Truck, Search, Eye, Filter } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import AnimalForm from '../components/AnimalForm';
+import RegisterBirthForm from '../components/RegisterBirthForm';
 import AnimalDetail from '../components/AnimalDetail';
 import type { Animal } from '../types';
 
@@ -23,7 +24,8 @@ const heatColors: Record<string, string> = {
 
 export default function Traceability() {
   const animals = useAppStore(s => s.animals);
-  const [showForm, setShowForm] = useState(false);
+  const [showBirth, setShowBirth] = useState(false);
+  const [showIntake, setShowIntake] = useState(false);
   const [selected, setSelected] = useState<Animal | null>(null);
   const [search, setSearch] = useState('');
   const [filterRole, setFilterRole] = useState('Todos');
@@ -42,9 +44,14 @@ export default function Traceability() {
           <h1 className="text-2xl font-bold text-white">Trazabilidad</h1>
           <p className="text-gray-400 text-sm mt-0.5">Registro de vida y genealogía de animales</p>
         </div>
-        <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2">
-          <Plus size={16} /> Agregar Animal
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => setShowBirth(true)} className="btn-primary flex items-center gap-2">
+            <Baby size={16} /> Registrar Parto
+          </button>
+          <button onClick={() => setShowIntake(true)} className="btn-secondary flex items-center gap-2">
+            <Truck size={16} /> Registrar Compra/Ingreso
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -145,7 +152,8 @@ export default function Traceability() {
         </div>
       </div>
 
-      {showForm && <AnimalForm onClose={() => setShowForm(false)} />}
+      {showBirth && <RegisterBirthForm onClose={() => setShowBirth(false)} />}
+      {showIntake && <AnimalForm onClose={() => setShowIntake(false)} />}
       {selected && <AnimalDetail animal={selected} onClose={() => setSelected(null)} />}
     </div>
   );
