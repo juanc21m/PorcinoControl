@@ -10,9 +10,9 @@ interface Props {
 
 type RoleOption = AnimalRole | 'N/A';
 
-/** Calcula el siguiente ID disponible para un género (M-000001 / F-000001). */
+/** Calcula el siguiente ID disponible para un género (M-000001 machos / H-000001 hembras). */
 function previewTag(animals: { tag: string }[], gender: 'Macho' | 'Hembra'): string {
-  const prefix = gender === 'Macho' ? 'M' : 'F';
+  const prefix = gender === 'Macho' ? 'M' : 'H';
   const nums = animals
     .filter(a => a.tag.startsWith(prefix + '-'))
     .map(a => parseInt(a.tag.slice(2), 10))

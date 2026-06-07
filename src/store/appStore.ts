@@ -40,7 +40,7 @@ const CURRENT_DATE = '2026-05-30';
 // Helpers
 // ---------------------------------------------------------------------------
 
-function getNextTag(animals: Animal[], prefix: 'M' | 'F'): string {
+function getNextTag(animals: Animal[], prefix: 'M' | 'H'): string {
   const nums = animals
     .filter(a => a.tag.startsWith(prefix + '-'))
     .map(a => parseInt(a.tag.slice(2), 10))
@@ -161,7 +161,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   addAnimal: (data) => {
     const { animals } = get();
-    const prefix = data.gender === 'Macho' ? 'M' : 'F';
+    const prefix = data.gender === 'Macho' ? 'M' : 'H';
     const tag = getNextTag(animals, prefix);
     const today = get().currentDate;
     const newAnimal: Animal = {
@@ -200,9 +200,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     });
 
     const newPiglets: Animal[] = Array.from({ length: pigletCount }, (_, i) => {
-      const prefix: 'M' | 'F' = i % 2 === 0 ? 'M' : 'F';
+      const prefix: 'M' | 'H' = i % 2 === 0 ? 'M' : 'H';
       const tag = getNextTag(
-        [...updatedAnimals, ...Array.from({ length: i }, (__, j) => ({ tag: `${j % 2 === 0 ? 'M' : 'F'}-999999` } as Animal))],
+        [...updatedAnimals, ...Array.from({ length: i }, (__, j) => ({ tag: `${j % 2 === 0 ? 'M' : 'H'}-999999` } as Animal))],
         prefix
       );
       return mkPigletStub(tag, i % 2 === 0 ? 'Macho' : 'Hembra', today, avgWeight, motherId, mother?.padrote_id);
