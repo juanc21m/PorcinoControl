@@ -99,7 +99,7 @@ export default function Inventory() {
           <h3 className="text-white font-semibold">Stock Actual</h3>
         </div>
         <table className="w-full text-sm">
-          <thead className="bg-gray-800/50">
+          <thead className="bg-primary-800/40">
             <tr className="text-gray-400">
               <th className="text-left px-5 py-3">Tipo de Alimento</th>
               <th className="text-left px-5 py-3">Sacos en Stock</th>
@@ -233,7 +233,7 @@ export default function Inventory() {
                 onChange={e => setUseForm({ ...useForm, note: e.target.value })}
               />
             </div>
-            <div className="bg-gray-800/50 border border-gray-700 rounded-lg px-4 py-2 text-sm text-gray-400">
+            <div className="bg-primary-800/40 border border-gray-700 rounded-lg px-4 py-2 text-sm text-gray-400">
               Disponible: <span className="text-white font-semibold">{inventory[useForm.feedType].lb.toLocaleString()} lb</span> ({inventory[useForm.feedType].sacos} sacos)
             </div>
             {useError && <p className="text-red-400 text-xs">{useError}</p>}
@@ -250,7 +250,7 @@ export default function Inventory() {
           <h3 className="text-white font-semibold">Últimas Transacciones de Inventario</h3>
         </div>
         <table className="w-full text-sm">
-          <thead className="bg-gray-800/50">
+          <thead className="bg-primary-800/40">
             <tr className="text-gray-400">
               <th className="text-left px-5 py-3">Fecha</th>
               <th className="text-left px-5 py-3">Tipo</th>

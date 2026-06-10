@@ -128,7 +128,7 @@ export default function Etapas() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-800/50">
+            <thead className="bg-primary-800/40">
               <tr className="text-gray-400">
                 <th className="text-left px-4 py-3">Tag</th>
                 <th className="text-left px-4 py-3">Rol</th>

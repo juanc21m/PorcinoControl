@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { PiggyBank, Mail, Lock, AlertCircle } from 'lucide-react';
+import { Mail, Lock, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { LOGO_URL, APP_NAME } from '../lib/brand';
 
 export default function Login() {
   const { login, isAuthenticated, loading } = useAuth();
@@ -52,13 +53,10 @@ export default function Login() {
       <div className="relative z-10 w-full max-w-sm bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl p-7">
         {/* Logo / marca */}
         <div className="flex flex-col items-center mb-6">
-          <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center mb-3 shadow-lg shadow-emerald-900/40">
-            <PiggyBank size={24} className="text-white" />
-          </div>
-          <h1 className="text-white font-bold text-xl tracking-tight">
-            Porci<span className="text-emerald-400">Control</span>
-          </h1>
-          <p className="text-slate-400 text-xs mt-1">Agro Comercial Moreno · ERP</p>
+          <span className="bg-white rounded-xl px-4 py-2.5 inline-flex items-center mb-2 shadow-lg">
+            <img src={LOGO_URL} alt={APP_NAME} className="h-11 w-auto object-contain" />
+          </span>
+          <p className="text-slate-400 text-xs mt-1">ERP · Gestión Porcina</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

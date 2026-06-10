@@ -4,6 +4,7 @@ import { useAppStore } from '../store/appStore';
 import AnimalForm from '../components/AnimalForm';
 import RegisterBirthForm from '../components/RegisterBirthForm';
 import AnimalDetail from '../components/AnimalDetail';
+import { LOGO_URL, APP_NAME } from '../lib/brand';
 import type { Animal } from '../types';
 
 const statusColors: Record<string, string> = {
@@ -39,10 +40,15 @@ export default function Traceability() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Trazabilidad</h1>
-          <p className="text-gray-400 text-sm mt-0.5">Registro de vida y genealogía de animales</p>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="bg-white rounded-lg p-1.5 hidden sm:inline-flex items-center shadow-sm">
+            <img src={LOGO_URL} alt={APP_NAME} className="h-8 w-auto object-contain" />
+          </span>
+          <div>
+            <h1 className="text-2xl font-bold text-white">Trazabilidad</h1>
+            <p className="text-gray-400 text-sm mt-0.5">{APP_NAME} · Registro de vida y genealogía</p>
+          </div>
         </div>
         <div className="flex flex-wrap gap-2">
           <button onClick={() => setShowBirth(true)} className="btn-primary flex items-center gap-2">
@@ -95,7 +101,7 @@ export default function Traceability() {
       <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-800/50">
+            <thead className="bg-primary-800/40">
               <tr className="text-gray-400">
                 <th className="text-left px-4 py-3">Tag</th>
                 <th className="text-left px-4 py-3">Género</th>

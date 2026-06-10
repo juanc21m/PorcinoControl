@@ -21,13 +21,13 @@
   }
 
   .btn-primary {
-    @apply bg-brand-800 hover:bg-brand-700 text-white font-medium px-4 py-2 rounded-lg text-sm
-           transition-all shadow-glow hover:shadow-glow-lg;
+    @apply bg-primary-800 hover:bg-primary-700 text-white font-medium px-4 py-2 rounded-lg text-sm
+           transition-all shadow-sm;
   }
 
   .btn-secondary {
-    @apply bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium px-4 py-2 rounded-lg text-sm
-           border border-gray-700 transition-colors;
+    @apply bg-gray-800 hover:bg-gray-700 text-accent-300 font-medium px-4 py-2 rounded-lg text-sm
+           border border-accent-700/40 transition-colors;
   }
 }
 

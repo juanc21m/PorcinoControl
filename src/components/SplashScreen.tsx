@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { LOGO_URL, APP_NAME } from '../lib/brand';
 
 /**
  * Pantalla de bienvenida interactiva (ruta `/`).
@@ -197,11 +198,15 @@ export default function SplashScreen() {
 
       {/* ===================== MARCA + LLAMADA A LA ACCIÓN ===================== */}
       <div className="absolute inset-x-0 top-0 flex flex-col items-center pt-10 sm:pt-14 px-4 text-center">
-        <h1 className="text-white font-extrabold text-4xl sm:text-5xl tracking-tight drop-shadow-[0_3px_6px_rgba(0,0,0,0.45)]">
-          Porci<span className="text-emerald-300">Control</span>
-        </h1>
-        <p className="mt-2 text-emerald-50/90 text-sm sm:text-base font-medium drop-shadow">
-          Agro Comercial Moreno
+        <span className="bg-white rounded-2xl px-5 py-3 sm:px-6 sm:py-4 inline-flex items-center shadow-[0_10px_30px_rgba(0,0,0,0.45)]">
+          <img
+            src={LOGO_URL}
+            alt={APP_NAME}
+            className="h-16 sm:h-20 w-auto object-contain"
+          />
+        </span>
+        <p className="mt-3 text-emerald-50/90 text-sm sm:text-base font-medium tracking-wide drop-shadow">
+          Sistema de Gestión Porcina
         </p>
       </div>
 

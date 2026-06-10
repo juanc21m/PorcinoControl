@@ -117,7 +117,7 @@ function PurchaseForm({ onClose }: { onClose: () => void }) {
             </div>
             <div className="bg-gray-800/30 border border-gray-800 rounded-lg overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-gray-800/50 text-gray-400">
+                <thead className="bg-primary-800/40 text-gray-400">
                   <tr>
                     <th className="text-left px-3 py-2 font-medium">Tipo Alimento</th>
                     <th className="text-left px-3 py-2 font-medium">Cantidad</th>
@@ -336,7 +336,7 @@ export default function Finances() {
           </div>
           <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-gray-800/50">
+              <thead className="bg-primary-800/40">
                 <tr className="text-gray-400">
                   <th className="text-left px-4 py-3">Factura</th>
                   <th className="text-left px-4 py-3">Proveedor</th>
@@ -387,7 +387,7 @@ export default function Finances() {
           </div>
           <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-gray-800/50">
+              <thead className="bg-primary-800/40">
                 <tr className="text-gray-400">
                   <th className="text-left px-4 py-3">Factura</th>
                   <th className="text-left px-4 py-3">Cliente</th>

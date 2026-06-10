@@ -81,7 +81,7 @@ export default function Supplies() {
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-800/50 text-gray-400">
+            <thead className="bg-primary-800/40 text-gray-400">
               <tr>
                 <th className="text-left px-5 py-3">Insumo</th>
                 <th className="text-left px-5 py-3">Marca</th>

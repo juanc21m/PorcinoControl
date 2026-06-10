@@ -142,7 +142,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           {ETAPAS.map(etapa => (
             <div key={etapa} className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5 flex flex-col items-center justify-center text-center">
-              <span className="font-bold leading-none text-4xl sm:text-5xl lg:text-6xl" style={{ color: '#4CAF50' }}>
+              <span className="font-bold leading-none text-4xl sm:text-5xl lg:text-6xl" style={{ color: '#2E9437' }}>
                 {etapaCounts[etapa]}
               </span>
               <span className="text-gray-300 text-xs sm:text-sm mt-2">{etapa}</span>
@@ -216,9 +216,9 @@ export default function Dashboard() {
             <Tooltip
               contentStyle={{ background: '#111827', border: '1px solid #374151', borderRadius: 8 }}
               labelStyle={{ color: '#fff' }}
-              cursor={{ fill: 'rgba(76,175,80,0.08)' }}
+              cursor={{ fill: 'rgba(46,148,55,0.10)' }}
             />
-            <Bar dataKey="nacimientos" fill="#4CAF50" radius={[4, 4, 0, 0]} name="Nacimientos" />
+            <Bar dataKey="nacimientos" fill="#2E9437" radius={[4, 4, 0, 0]} name="Nacimientos" />
           </BarChart>
         </ResponsiveContainer>
       </div>

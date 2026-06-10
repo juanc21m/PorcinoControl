@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, GitBranch, DollarSign, Database, PiggyBank, Package, Workflow, Contact, LogOut, X, Boxes, TestTube, FileSpreadsheet } from 'lucide-react';
+import { LayoutDashboard, GitBranch, DollarSign, Database, Package, Workflow, Contact, LogOut, X, Boxes, TestTube, FileSpreadsheet } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { LOGO_URL, APP_NAME } from '../lib/brand';
 
 const links = [
   { to: '/dashboard',   label: 'Dashboard',      icon: LayoutDashboard },
@@ -37,20 +38,19 @@ export default function Navbar({ open, onClose }: NavbarProps) {
 
   return (
     <aside
-      className={`fixed left-0 top-0 h-screen w-64 sm:w-56 bg-gray-900 border-r border-gray-800 flex flex-col z-50
+      className={`fixed left-0 top-0 h-screen w-64 sm:w-56 bg-primary-900 border-r border-primary-700/60 flex flex-col z-50
         transform transition-transform duration-200 ease-out
         md:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}
     >
       {/* Logo + cerrar (móvil) */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-gray-800">
-        <div className="w-9 h-9 rounded-full bg-brand-800 flex items-center justify-center shadow-glow">
-          <PiggyBank size={20} className="text-white" />
-        </div>
-        <span className="text-white font-bold text-lg tracking-tight">PorciControl</span>
+      <div className="flex items-center gap-3 px-4 py-5 border-b border-primary-700/60">
+        <span className="bg-white rounded-lg p-1.5 inline-flex items-center shadow-sm">
+          <img src={LOGO_URL} alt={APP_NAME} className="h-9 w-auto object-contain" />
+        </span>
         <button
           onClick={onClose}
           aria-label="Cerrar menú"
-          className="ml-auto md:hidden text-gray-400 hover:text-white p-1 -mr-1"
+          className="ml-auto md:hidden text-gray-300 hover:text-white p-1 -mr-1"
         >
           <X size={20} />
         </button>

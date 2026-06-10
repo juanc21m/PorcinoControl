@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import { Menu, PiggyBank } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import Navbar from './Navbar';
 import ErrorBoundary from './ErrorBoundary';
 import { useAppStore } from '../store/appStore';
 import { useAuth } from '../context/AuthContext';
+import { LOGO_URL, APP_NAME } from '../lib/brand';
 
 /**
  * Corre el motor biológico cuando cambia el hato o la fecha simulada: aplica
@@ -76,7 +77,7 @@ export default function ProtectedLayout() {
         )}
 
         {/* Barra superior móvil con botón hamburguesa */}
-        <header className="md:hidden sticky top-0 z-30 flex items-center gap-3 h-14 px-4 bg-gray-900 border-b border-gray-800">
+        <header className="md:hidden sticky top-0 z-30 flex items-center gap-3 h-14 px-4 bg-primary-900 border-b border-primary-700/60">
           <button
             onClick={() => setSidebarOpen(true)}
             aria-label="Abrir menú"
@@ -84,12 +85,9 @@ export default function ProtectedLayout() {
           >
             <Menu size={24} />
           </button>
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full bg-brand-800 flex items-center justify-center">
-              <PiggyBank size={16} className="text-white" />
-            </div>
-            <span className="text-white font-bold tracking-tight">PorciControl</span>
-          </div>
+          <span className="bg-white rounded-md p-1 inline-flex items-center">
+            <img src={LOGO_URL} alt={APP_NAME} className="h-7 w-auto object-contain" />
+          </span>
         </header>
 
         {/* Contenido. min-w-0 evita que tablas/gráficas fuercen scroll horizontal. */}
