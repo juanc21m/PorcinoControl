@@ -9,18 +9,28 @@ import { LOGO_URL, APP_NAME } from '../lib/brand';
 // Ecosistema flotante: posiciones, tamaños, opacidades y tiempos escalonados
 // (estáticos para que el movimiento sea orgánico y no se re-aleatorice al render).
 const FLOATERS: { Icon: LucideIcon; left: string; top: string; size: number; op: number; dur: string; delay: string; x: string; rot: string }[] = [
-  { Icon: PiggyBank, left: '8%',  top: '78%', size: 64, op: 0.08, dur: '30s', delay: '0s',   x: '40px',  rot: '35deg' },
-  { Icon: Leaf,      left: '22%', top: '92%', size: 40, op: 0.07, dur: '24s', delay: '-6s',  x: '-30px', rot: '-40deg' },
-  { Icon: Wheat,     left: '38%', top: '85%', size: 52, op: 0.06, dur: '34s', delay: '-12s', x: '25px',  rot: '30deg' },
-  { Icon: Tractor,   left: '55%', top: '95%', size: 72, op: 0.07, dur: '38s', delay: '-3s',  x: '50px',  rot: '20deg' },
-  { Icon: Sprout,    left: '70%', top: '80%', size: 44, op: 0.08, dur: '26s', delay: '-15s', x: '-20px', rot: '45deg' },
-  { Icon: Bird,      left: '85%', top: '88%', size: 48, op: 0.06, dur: '32s', delay: '-9s',  x: '35px',  rot: '-30deg' },
-  { Icon: Leaf,      left: '92%', top: '70%', size: 36, op: 0.07, dur: '28s', delay: '-20s', x: '-25px', rot: '50deg' },
-  { Icon: Wheat,     left: '15%', top: '60%', size: 44, op: 0.06, dur: '36s', delay: '-18s', x: '30px',  rot: '-35deg' },
-  { Icon: PiggyBank, left: '63%', top: '68%', size: 40, op: 0.06, dur: '27s', delay: '-22s', x: '-35px', rot: '40deg' },
-  { Icon: Sprout,    left: '46%', top: '74%', size: 38, op: 0.07, dur: '31s', delay: '-7s',  x: '20px',  rot: '-25deg' },
-  { Icon: Tractor,   left: '30%', top: '66%', size: 50, op: 0.05, dur: '40s', delay: '-26s', x: '45px',  rot: '30deg' },
-  { Icon: Bird,      left: '78%', top: '60%', size: 34, op: 0.07, dur: '25s', delay: '-13s', x: '-30px', rot: '-45deg' },
+  { Icon: PiggyBank, left: '6%',  top: '80%', size: 64, op: 0.16, dur: '16s', delay: '0s',   x: '40px',  rot: '35deg' },
+  { Icon: Leaf,      left: '16%', top: '95%', size: 40, op: 0.18, dur: '13s', delay: '-4s',  x: '-30px', rot: '-40deg' },
+  { Icon: Wheat,     left: '27%', top: '88%', size: 52, op: 0.15, dur: '18s', delay: '-9s',  x: '25px',  rot: '30deg' },
+  { Icon: Tractor,   left: '38%', top: '97%', size: 70, op: 0.16, dur: '20s', delay: '-2s',  x: '50px',  rot: '20deg' },
+  { Icon: Sprout,    left: '48%', top: '85%', size: 44, op: 0.18, dur: '14s', delay: '-11s', x: '-20px', rot: '45deg' },
+  { Icon: Bird,      left: '58%', top: '92%', size: 48, op: 0.15, dur: '17s', delay: '-6s',  x: '35px',  rot: '-30deg' },
+  { Icon: Leaf,      left: '69%', top: '96%', size: 36, op: 0.18, dur: '12s', delay: '-14s', x: '-25px', rot: '50deg' },
+  { Icon: Wheat,     left: '80%', top: '88%', size: 50, op: 0.15, dur: '19s', delay: '-3s',  x: '30px',  rot: '-35deg' },
+  { Icon: PiggyBank, left: '90%', top: '94%', size: 44, op: 0.16, dur: '15s', delay: '-8s',  x: '-35px', rot: '40deg' },
+  { Icon: Tractor,   left: '12%', top: '64%', size: 50, op: 0.14, dur: '22s', delay: '-16s', x: '45px',  rot: '30deg' },
+  { Icon: Sprout,    left: '24%', top: '70%', size: 38, op: 0.17, dur: '14s', delay: '-19s', x: '20px',  rot: '-25deg' },
+  { Icon: Bird,      left: '34%', top: '60%', size: 34, op: 0.16, dur: '16s', delay: '-12s', x: '-30px', rot: '-45deg' },
+  { Icon: Leaf,      left: '44%', top: '66%', size: 42, op: 0.18, dur: '13s', delay: '-5s',  x: '28px',  rot: '38deg' },
+  { Icon: Wheat,     left: '54%', top: '72%', size: 46, op: 0.15, dur: '18s', delay: '-21s', x: '-22px', rot: '-30deg' },
+  { Icon: PiggyBank, left: '64%', top: '62%', size: 40, op: 0.16, dur: '15s', delay: '-7s',  x: '32px',  rot: '28deg' },
+  { Icon: Tractor,   left: '74%', top: '70%', size: 56, op: 0.14, dur: '21s', delay: '-17s', x: '-40px', rot: '22deg' },
+  { Icon: Sprout,    left: '84%', top: '64%', size: 40, op: 0.17, dur: '14s', delay: '-10s', x: '24px',  rot: '-42deg' },
+  { Icon: Bird,      left: '94%', top: '74%', size: 38, op: 0.16, dur: '17s', delay: '-23s', x: '-26px', rot: '44deg' },
+  { Icon: Leaf,      left: '4%',  top: '50%', size: 34, op: 0.15, dur: '16s', delay: '-13s', x: '30px',  rot: '-35deg' },
+  { Icon: Wheat,     left: '50%', top: '52%', size: 40, op: 0.14, dur: '19s', delay: '-9s',  x: '-28px', rot: '32deg' },
+  { Icon: Sprout,    left: '88%', top: '48%', size: 36, op: 0.16, dur: '15s', delay: '-18s', x: '22px',  rot: '40deg' },
+  { Icon: PiggyBank, left: '20%', top: '46%', size: 42, op: 0.14, dur: '20s', delay: '-15s', x: '-32px', rot: '-28deg' },
 ];
 
 export default function Login() {
@@ -74,7 +84,7 @@ export default function Login() {
             <Icon
               key={i}
               size={f.size}
-              className="absolute text-brand-500 animate-login-float"
+              className="absolute text-brand-300 animate-login-float"
               style={{
                 left: f.left,
                 top: f.top,
