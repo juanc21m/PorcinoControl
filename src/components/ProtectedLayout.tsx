@@ -77,17 +77,15 @@ export default function ProtectedLayout() {
         )}
 
         {/* Barra superior móvil con botón hamburguesa */}
-        <header className="md:hidden sticky top-0 z-30 flex items-center gap-3 h-14 px-4 bg-primary-900 border-b border-primary-700/60">
+        <header className="md:hidden sticky top-0 z-30 flex items-center gap-3 h-14 px-4 bg-white border-b border-gray-200 shadow-[0_2px_5px_rgba(0,0,0,0.05)]">
           <button
             onClick={() => setSidebarOpen(true)}
             aria-label="Abrir menú"
-            className="text-gray-300 hover:text-white -ml-1 p-1"
+            className="text-gray-700 hover:text-gray-900 -ml-1 p-1"
           >
             <Menu size={24} />
           </button>
-          <span className="bg-white rounded-md p-1 inline-flex items-center">
-            <img src={LOGO_URL} alt={APP_NAME} className="h-7 w-auto object-contain" />
-          </span>
+          <img src={LOGO_URL} alt={APP_NAME} className="h-8 w-auto object-contain" />
         </header>
 
         {/* Contenido. min-w-0 evita que tablas/gráficas fuercen scroll horizontal. */}
