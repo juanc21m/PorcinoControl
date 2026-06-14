@@ -50,24 +50,22 @@ export default function Login() {
       {/* Halo de fondo */}
       <div className="absolute w-[500px] h-[500px] rounded-full bg-emerald-500/10 blur-3xl" />
 
-      <div className="relative z-10 w-full max-w-sm bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl p-7">
-        {/* Logo / marca */}
+      <div className="relative z-10 w-full max-w-sm bg-white rounded-2xl shadow-2xl p-7">
+        {/* Logo / marca (sobre tarjeta blanca, sin fondos extra) */}
         <div className="flex flex-col items-center mb-6">
-          <span className="bg-white rounded-xl px-4 py-2.5 inline-flex items-center mb-2 shadow-lg">
-            <img src={LOGO_URL} alt={APP_NAME} className="h-11 w-auto object-contain" />
-          </span>
-          <p className="text-slate-400 text-xs mt-1">ERP · Gestión Porcina</p>
+          <img src={LOGO_URL} alt={APP_NAME} className="w-full max-w-[200px] h-auto object-contain" />
+          <p className="text-gray-500 text-xs mt-2">ERP · Gestión Porcina</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs text-slate-400 mb-1 font-medium">Correo Electrónico</label>
+            <label className="block text-xs text-gray-700 mb-1 font-medium">Correo Electrónico</label>
             <div className="relative">
-              <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+              <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 type="email"
                 autoComplete="username"
-                className="w-full bg-slate-900 border border-slate-700 text-white rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
+                className="w-full bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 transition-colors"
                 placeholder="correo@empresa.com"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
@@ -77,13 +75,13 @@ export default function Login() {
           </div>
 
           <div>
-            <label className="block text-xs text-slate-400 mb-1 font-medium">Contraseña</label>
+            <label className="block text-xs text-gray-700 mb-1 font-medium">Contraseña</label>
             <div className="relative">
-              <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+              <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 type="password"
                 autoComplete="current-password"
-                className="w-full bg-slate-900 border border-slate-700 text-white rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
+                className="w-full bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 transition-colors"
                 placeholder="••••••••"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
@@ -93,7 +91,7 @@ export default function Login() {
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 text-xs text-red-400">
+            <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-xs text-red-600">
               <AlertCircle size={14} className="shrink-0" />
               {error}
             </div>
@@ -102,13 +100,13 @@ export default function Login() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-lg text-sm transition-colors shadow-lg shadow-emerald-900/30"
+            className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-lg text-sm transition-colors shadow-lg shadow-emerald-900/20"
           >
             {submitting ? 'Ingresando…' : 'Ingresar'}
           </button>
         </form>
 
-        <p className="text-center text-slate-600 text-xs mt-6">v1.0.0 — Acceso restringido</p>
+        <p className="text-center text-gray-400 text-xs mt-6">v1.0.0 — Acceso restringido</p>
       </div>
     </div>
   );
