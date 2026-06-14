@@ -98,3 +98,15 @@
 .animate-leg-b       { transform-box: fill-box; transform-origin: top center;  animation: leg-swing-b 0.7s ease-in-out infinite; }
 .animate-cloud-drift { animation: cloud-drift 9s ease-in-out infinite alternate; }
 .animate-sun-glow    { animation: sun-glow 4s ease-in-out infinite; }
+
+/* ---- Login: ecosistema flotante (screensaver agrícola) ---- */
+@keyframes login-float {
+  0%   { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+  15%  { opacity: var(--float-op, 0.08); }
+  85%  { opacity: var(--float-op, 0.08); }
+  100% { transform: translate(var(--float-x, 30px), -115vh) rotate(var(--float-rot, 40deg)); opacity: 0; }
+}
+.animate-login-float {
+  animation: login-float var(--float-dur, 28s) linear infinite;
+  will-change: transform, opacity;
+}

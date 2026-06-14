@@ -1,8 +1,27 @@
 import { useState } from 'react';
+import type { CSSProperties } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Mail, Lock, AlertCircle } from 'lucide-react';
+import { Mail, Lock, AlertCircle, PiggyBank, Leaf, Wheat, Tractor, Sprout, Bird } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { LOGO_URL, APP_NAME } from '../lib/brand';
+
+// Ecosistema flotante: posiciones, tamaños, opacidades y tiempos escalonados
+// (estáticos para que el movimiento sea orgánico y no se re-aleatorice al render).
+const FLOATERS: { Icon: LucideIcon; left: string; top: string; size: number; op: number; dur: string; delay: string; x: string; rot: string }[] = [
+  { Icon: PiggyBank, left: '8%',  top: '78%', size: 64, op: 0.08, dur: '30s', delay: '0s',   x: '40px',  rot: '35deg' },
+  { Icon: Leaf,      left: '22%', top: '92%', size: 40, op: 0.07, dur: '24s', delay: '-6s',  x: '-30px', rot: '-40deg' },
+  { Icon: Wheat,     left: '38%', top: '85%', size: 52, op: 0.06, dur: '34s', delay: '-12s', x: '25px',  rot: '30deg' },
+  { Icon: Tractor,   left: '55%', top: '95%', size: 72, op: 0.07, dur: '38s', delay: '-3s',  x: '50px',  rot: '20deg' },
+  { Icon: Sprout,    left: '70%', top: '80%', size: 44, op: 0.08, dur: '26s', delay: '-15s', x: '-20px', rot: '45deg' },
+  { Icon: Bird,      left: '85%', top: '88%', size: 48, op: 0.06, dur: '32s', delay: '-9s',  x: '35px',  rot: '-30deg' },
+  { Icon: Leaf,      left: '92%', top: '70%', size: 36, op: 0.07, dur: '28s', delay: '-20s', x: '-25px', rot: '50deg' },
+  { Icon: Wheat,     left: '15%', top: '60%', size: 44, op: 0.06, dur: '36s', delay: '-18s', x: '30px',  rot: '-35deg' },
+  { Icon: PiggyBank, left: '63%', top: '68%', size: 40, op: 0.06, dur: '27s', delay: '-22s', x: '-35px', rot: '40deg' },
+  { Icon: Sprout,    left: '46%', top: '74%', size: 38, op: 0.07, dur: '31s', delay: '-7s',  x: '20px',  rot: '-25deg' },
+  { Icon: Tractor,   left: '30%', top: '66%', size: 50, op: 0.05, dur: '40s', delay: '-26s', x: '45px',  rot: '30deg' },
+  { Icon: Bird,      left: '78%', top: '60%', size: 34, op: 0.07, dur: '25s', delay: '-13s', x: '-30px', rot: '-45deg' },
+];
 
 export default function Login() {
   const { login, isAuthenticated, loading } = useAuth();
@@ -47,8 +66,31 @@ export default function Login() {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-slate-900 px-4 overflow-hidden">
+      {/* Ecosistema flotante (screensaver agrícola) */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none" aria-hidden="true">
+        {FLOATERS.map((f, i) => {
+          const Icon = f.Icon;
+          return (
+            <Icon
+              key={i}
+              size={f.size}
+              className="absolute text-brand-500 animate-login-float"
+              style={{
+                left: f.left,
+                top: f.top,
+                '--float-op': f.op,
+                '--float-dur': f.dur,
+                '--float-x': f.x,
+                '--float-rot': f.rot,
+                animationDelay: f.delay,
+              } as CSSProperties}
+            />
+          );
+        })}
+      </div>
+
       {/* Halo de fondo */}
-      <div className="absolute w-[500px] h-[500px] rounded-full bg-emerald-500/10 blur-3xl" />
+      <div className="absolute z-0 w-[500px] h-[500px] rounded-full bg-emerald-500/10 blur-3xl" />
 
       <div className="relative z-10 w-full max-w-sm bg-white rounded-2xl shadow-2xl p-7">
         {/* Logo / marca (sobre tarjeta blanca, sin fondos extra) */}
