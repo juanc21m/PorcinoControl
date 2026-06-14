@@ -7,10 +7,28 @@ import { es } from 'date-fns/locale';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts';
-import { AlertTriangle, AlertCircle, Info, Baby } from 'lucide-react';
+import { AlertTriangle, AlertCircle, Info, Baby, PiggyBank, CalendarClock } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { ETAPAS, FEED_TYPES, LB_PER_SACO } from '../types';
 import type { EtapaProductiva, FeedType, AlertType, AlertSeverity } from '../types';
+
+const LOW_FEED_SACOS = 50;
+
+/** Tarjeta de resumen con estilo glassmorphism. */
+function StatCard({ Icon, iconClass, label, value }: { Icon: LucideIcon; iconClass: string; label: string; value: string | number }) {
+  return (
+    <div className="rounded-xl border border-white/60 bg-white/80 backdrop-blur-sm shadow-lg p-4 sm:p-5 flex items-center gap-4">
+      <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shrink-0 ${iconClass}`}>
+        <Icon size={24} />
+      </div>
+      <div className="min-w-0">
+        <p className="text-gray-500 text-[11px] sm:text-xs font-medium uppercase tracking-wide truncate">{label}</p>
+        <p className="text-2xl sm:text-3xl font-bold text-primary-900 leading-tight">{value}</p>
+      </div>
+    </div>
+  );
+}
 
 // ---- Severity styling ----
 const severityStyle: Record<AlertSeverity, { color: string; Icon: typeof AlertTriangle }> = {
@@ -122,6 +140,19 @@ export default function Dashboard() {
     return grouped;
   }, [alerts]);
 
+  // -------------------------------------------------------------------------
+  // Tarjetas de resumen (datos críticos rápidos)
+  // -------------------------------------------------------------------------
+  const summary = useMemo(() => {
+    const ym = currentDate.slice(0, 7); // 'YYYY-MM'
+    return {
+      cerdasActivas: animals.filter(a => a.gender === 'Hembra' && a.status === 'Activo').length,
+      partosMes: animals.filter(a => (a.lastFarrowingDate ?? '').slice(0, 7) === ym).length,
+      verracos: animals.filter(a => a.gender === 'Macho' && a.status === 'Activo').length,
+      lowFeed: Object.values(inventory).filter(v => v.sacos <= LOW_FEED_SACOS).length,
+    };
+  }, [animals, inventory, currentDate]);
+
   const fmtSacos = (lb: number, type: FeedType) => {
     const sacos = lb / LB_PER_SACO[type];
     const rounded = Math.round(sacos * 10) / 10;
@@ -134,6 +165,14 @@ export default function Dashboard() {
       <div>
         <h1 className="text-2xl font-bold text-white">Dashboard</h1>
         <p className="text-gray-400 text-sm mt-0.5">Resumen operativo en tiempo real · {currentDate}</p>
+      </div>
+
+      {/* Tarjetas de resumen (glassmorphism) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <StatCard Icon={PiggyBank} iconClass="bg-brand-100 text-brand-700" label="Cerdas Activas" value={summary.cerdasActivas} />
+        <StatCard Icon={CalendarClock} iconClass="bg-primary-100 text-primary-800" label="Partos este Mes" value={summary.partosMes} />
+        <StatCard Icon={PiggyBank} iconClass="bg-sky-100 text-sky-700" label="Verracos Totales" value={summary.verracos} />
+        <StatCard Icon={AlertTriangle} iconClass="bg-red-100 text-red-600" label="Alimento Bajo Stock" value={`${summary.lowFeed} ${summary.lowFeed === 1 ? 'Item' : 'Items'}`} />
       </div>
 
       {/* 1. Inventario de animales por etapa */}
