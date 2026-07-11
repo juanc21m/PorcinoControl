@@ -5,9 +5,9 @@ import { LOGO_URL, APP_NAME } from '../lib/brand';
 /**
  * Pantalla de bienvenida (ruta `/`).
  *
- * Fondo cinemático: video real de dron de la finca (public/video-finca.mp4)
- * reproduciéndose en bucle, silencioso (autoplay/loop/muted/playsinline),
- * con un overlay oscuro encima para que la tarjeta blanca central resalte.
+ * Fondo cinemático: video en bucle y silencioso (autoplay/loop/muted/playsinline)
+ * servido desde una URL pública (no se versiona en el repo por peso), con un
+ * overlay oscuro encima para que la tarjeta blanca central resalte.
  * Si el video aún no carga, el fondo base oscuro (bg-slate-900) hace de respaldo.
  */
 export default function SplashScreen() {
@@ -21,7 +21,7 @@ export default function SplashScreen() {
       {/* Video de fondo (dron de la finca) */}
       <video
         className="absolute inset-0 w-full h-full object-cover z-0"
-        src="/video-finca.mp4"
+        src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
         autoPlay
         loop
         muted
