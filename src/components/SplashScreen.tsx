@@ -32,8 +32,9 @@ export default function SplashScreen() {
       {/* Overlay oscuro: apaga el video para dar contraste a la tarjeta */}
       <div className="absolute inset-0 z-[1] bg-slate-900/50" aria-hidden="true" />
 
-      {/* Panel central de bienvenida */}
-      <div className="relative z-10 h-full flex items-center justify-center px-4">
+      {/* Panel de bienvenida anclado a la esquina inferior derecha
+          (deja el centro libre para apreciar el video) */}
+      <div className="relative z-10 h-full flex justify-end items-end p-6 sm:p-8 md:p-16">
         <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center text-center">
           <img src={LOGO_URL} alt={APP_NAME} className="w-full max-w-[220px] h-auto object-contain" />
           <p className="mt-3 text-gray-700 text-sm font-medium">Sistema de Gestión Porcina</p>
