@@ -9,7 +9,7 @@ import type {
   FeedType,
   InventoryTransaction,
   Supply,
-  SemenBatch,
+  Service,
 } from '../types';
 
 /**
@@ -258,28 +258,32 @@ function rowToSupply(r: Row): Supply {
   };
 }
 
-// ---- SemenBatch (pajillas por lote de extracción) ----
-function semenToRow(s: SemenBatch): Row {
+// ---- Service (servicios / montas) ----
+function serviceToRow(s: Service): Row {
   return clean({
     id: s.id,
-    padrote_id: s.padroteId,
-    padrote_tag: s.padroteTag,
+    animal_id: s.animalId,
+    animal_tag: s.animalTag,
+    tipo_servicio: s.tipoServicio,
+    padrote_id: s.padroteId ?? null,
+    padrote_tag: s.padroteTag ?? null,
     date: s.date,
-    straws_total: s.strawsTotal,
-    straws_available: s.strawsAvailable,
-    note: s.note ?? null,
+    origen_semen_notas: s.origenSemenNotas ?? null,
+    expected_farrowing_date: s.expectedFarrowingDate ?? null,
   });
 }
 
-function rowToSemen(r: Row): SemenBatch {
+function rowToService(r: Row): Service {
   return {
     id: r.id as string,
-    padroteId: r.padrote_id as string,
-    padroteTag: r.padrote_tag as string,
+    animalId: r.animal_id as string,
+    animalTag: r.animal_tag as string,
+    tipoServicio: r.tipo_servicio as Service['tipoServicio'],
+    padroteId: (r.padrote_id as string) ?? undefined,
+    padroteTag: (r.padrote_tag as string) ?? undefined,
     date: r.date as string,
-    strawsTotal: Number(r.straws_total),
-    strawsAvailable: Number(r.straws_available),
-    note: (r.note as string) ?? undefined,
+    origenSemenNotas: (r.origen_semen_notas as string) ?? undefined,
+    expectedFarrowingDate: (r.expected_farrowing_date as string) ?? undefined,
   };
 }
 
@@ -306,11 +310,11 @@ export interface AllData {
   inventory: FeedInventory;
   inventoryHistory: InventoryTransaction[];
   supplies: Supply[];
-  semenBatches: SemenBatch[];
+  services: Service[];
 }
 
 export async function fetchAllData(): Promise<AllData> {
-  const [animalsRes, contactsRes, purchasesRes, salesRes, invRes, txRes, suppliesRes, semenRes] = await Promise.all([
+  const [animalsRes, contactsRes, purchasesRes, salesRes, invRes, txRes, suppliesRes, servicesRes] = await Promise.all([
     supabase.from('animals').select('*').order('created_at', { ascending: true }),
     supabase.from('contacts').select('*').order('created_at', { ascending: true }),
     supabase.from('purchase_invoices').select('*').order('date', { ascending: false }),
@@ -318,12 +322,12 @@ export async function fetchAllData(): Promise<AllData> {
     supabase.from('feed_inventory').select('*'),
     supabase.from('inventory_transactions').select('*').order('date', { ascending: false }),
     supabase.from('supplies').select('*').order('name', { ascending: true }),
-    supabase.from('semen_batches').select('*').order('date', { ascending: false }),
+    supabase.from('services').select('*').order('date', { ascending: false }),
   ]);
 
   const firstError =
     animalsRes.error || contactsRes.error || purchasesRes.error ||
-    salesRes.error || invRes.error || txRes.error || suppliesRes.error || semenRes.error;
+    salesRes.error || invRes.error || txRes.error || suppliesRes.error || servicesRes.error;
   if (firstError) throw firstError;
 
   return {
@@ -334,7 +338,7 @@ export async function fetchAllData(): Promise<AllData> {
     inventory: rowsToInventory(invRes.data ?? []),
     inventoryHistory: (txRes.data ?? []).map(rowToTx),
     supplies: (suppliesRes.data ?? []).map(rowToSupply),
-    semenBatches: (semenRes.data ?? []).map(rowToSemen),
+    services: (servicesRes.data ?? []).map(rowToService),
   };
 }
 
@@ -453,18 +457,8 @@ export async function updateSupply(id: string, changes: Partial<Supply>): Promis
   if (error) throw error;
 }
 
-// ---- Semen ----
-export async function insertSemenBatch(b: SemenBatch): Promise<void> {
-  const { error } = await supabase.from('semen_batches').insert(semenToRow(b));
-  if (error) throw error;
-}
-
-export async function updateSemenBatch(id: string, changes: Partial<SemenBatch>): Promise<void> {
-  const row: Row = {};
-  if ('strawsAvailable' in changes) row.straws_available = changes.strawsAvailable;
-  if ('strawsTotal' in changes) row.straws_total = changes.strawsTotal;
-  if ('note' in changes) row.note = changes.note ?? null;
-  if (!Object.keys(row).length) return;
-  const { error } = await supabase.from('semen_batches').update(row).eq('id', id);
+// ---- Servicios / Montas ----
+export async function insertService(s: Service): Promise<void> {
+  const { error } = await supabase.from('services').insert(serviceToRow(s));
   if (error) throw error;
 }

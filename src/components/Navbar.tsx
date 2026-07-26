@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, GitBranch, DollarSign, Database, Package, Workflow, Contact, LogOut, X, Boxes, TestTube, FileSpreadsheet } from 'lucide-react';
+import { LayoutDashboard, GitBranch, DollarSign, Database, Package, Workflow, Contact, LogOut, X, Boxes, FileSpreadsheet } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { LOGO_URL, APP_NAME } from '../lib/brand';
 
@@ -9,7 +9,6 @@ const links = [
   { to: '/etapas',      label: 'Etapas',          icon: Workflow },
   { to: '/inventory',   label: 'Inventario',      icon: Package },
   { to: '/supplies',    label: 'Insumos',         icon: Boxes },
-  { to: '/semen',       label: 'Semen',           icon: TestTube },
   { to: '/finances',    label: 'Finanzas',        icon: DollarSign },
   { to: '/contacts',    label: 'Contactos',       icon: Contact },
   { to: '/reports',     label: 'Reportes',        icon: FileSpreadsheet },

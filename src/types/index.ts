@@ -126,17 +126,27 @@ export interface Supply {
 }
 
 // ---------------------------------------------------------------------------
-// Semen (pajillas) — registro por lotes de extracción
+// Servicios / Montas (registro reproductivo)
 // ---------------------------------------------------------------------------
 
-export interface SemenBatch {
+export type ServiceType = 'Monta Natural' | 'Inseminación Artificial';
+
+export const SERVICE_TYPES: readonly ServiceType[] = [
+  'Monta Natural',
+  'Inseminación Artificial',
+] as const;
+
+export interface Service {
   id: string;
-  padroteId: string;        // ID (UUID) del padrote
-  padroteTag: string;       // tag del padrote (para mostrar sin lookup)
-  date: string;             // fecha de extracción
-  strawsTotal: number;      // pajillas obtenidas en la extracción
-  strawsAvailable: number;  // pajillas disponibles (baja al inseminar)
-  note?: string;
+  animalId: string;             // cerda servida
+  animalTag: string;
+  tipoServicio: ServiceType;
+  padroteId?: string;           // macho reproductor responsable
+  padroteTag?: string;
+  date: string;                 // fecha del servicio
+  /** Origen de la dosis (proveedor, casa genética, lote…). Solo en I.A. */
+  origenSemenNotas?: string;
+  expectedFarrowingDate?: string;
 }
 
 // ---------------------------------------------------------------------------

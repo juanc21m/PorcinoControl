@@ -7,8 +7,8 @@ import { differenceInDays } from 'date-fns';
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from 'recharts';
-import type { Animal } from '../types';
-import { LIFETIME_FARROWING_LIMIT } from '../types';
+import type { Animal, ServiceType } from '../types';
+import { LIFETIME_FARROWING_LIMIT, SERVICE_TYPES } from '../types';
 import { safeParseISO } from '../lib/date';
 import { useAppStore } from '../store/appStore';
 
@@ -99,58 +99,92 @@ function FarrowingModal({ mother, onClose }: { mother: Animal; onClose: () => vo
 }
 
 // ---------------------------------------------------------------------------
-// Modal de Inseminación
+// Modal de Registro de Monta / Servicio
 // ---------------------------------------------------------------------------
-function InseminateModal({ female, onClose }: { female: Animal; onClose: () => void }) {
+function ServiceModal({ female, onClose }: { female: Animal; onClose: () => void }) {
   const animals = useAppStore(s => s.animals);
-  const semenBatches = useAppStore(s => s.semenBatches);
-  const inseminate = useAppStore(s => s.inseminate);
+  const registerService = useAppStore(s => s.registerService);
+  const currentDate = useAppStore(s => s.currentDate);
 
-  const available = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const b of semenBatches) map.set(b.padroteId, (map.get(b.padroteId) ?? 0) + b.strawsAvailable);
-    return map;
-  }, [semenBatches]);
+  const padrotes = animals.filter(a => a.status === 'Activo' && (a.role === 'Padrote' || a.gender === 'Macho'));
 
-  const withStock = animals
-    .filter(a => a.status === 'Activo' && (a.role === 'Padrote' || a.gender === 'Macho'))
-    .map(p => ({ ...p, straws: available.get(p.id) ?? 0 }))
-    .filter(p => p.straws > 0);
+  const [tipoServicio, setTipoServicio] = useState<ServiceType>('Monta Natural');
+  const [padroteId, setPadroteId] = useState(female.padrote_id ?? '');
+  const [date, setDate] = useState(currentDate);
+  const [origenSemenNotas, setOrigenSemenNotas] = useState('');
+  const [error, setError] = useState('');
 
-  const [padroteId, setPadroteId] = useState('');
+  const isIA = tipoServicio === 'Inseminación Artificial';
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!padroteId) return;
-    inseminate(female.id, padroteId);
+    if (!padroteId) { setError('Selecciona el padrote / macho reproductor.'); return; }
+    registerService(female.id, {
+      tipoServicio,
+      padroteId,
+      date,
+      origenSemenNotas: isIA ? origenSemenNotas : undefined,
+    });
     onClose();
   }
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[60] p-4">
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 w-full max-w-sm">
-        <h3 className="text-white font-semibold mb-4 flex items-center gap-2"><Syringe size={18} className="text-brand-400" /> Inseminar {female.tag}</h3>
-        {withStock.length === 0 ? (
-          <div className="space-y-4">
-            <p className="text-sm text-red-400">No hay pajillas disponibles. Registra una extracción en el módulo de Semen.</p>
-            <div className="flex justify-end"><button onClick={onClose} className="btn-secondary">Cerrar</button></div>
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+          <Syringe size={18} className="text-brand-400" /> Registrar Servicio · {female.tag}
+        </h3>
+        <form onSubmit={submit} className="space-y-4">
+          <div>
+            <label className="label">Tipo de Servicio</label>
+            <select
+              className="input"
+              value={tipoServicio}
+              onChange={e => setTipoServicio(e.target.value as ServiceType)}
+            >
+              {SERVICE_TYPES.map(t => <option key={t}>{t}</option>)}
+            </select>
           </div>
-        ) : (
-          <form onSubmit={submit} className="space-y-4">
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="label">Padrote (pajillas disponibles)</label>
+              <label className="label">Padrote / Macho Reproductor</label>
               <select className="input" value={padroteId} onChange={e => setPadroteId(e.target.value)} required>
                 <option value="" disabled>Seleccionar…</option>
-                {withStock.map(p => <option key={p.id} value={p.id}>{p.tag} — {p.straws} pajilla(s)</option>)}
+                {padrotes.map(p => <option key={p.id} value={p.id}>{p.tag}</option>)}
               </select>
             </div>
-            <p className="text-gray-500 text-xs">Se descontará 1 pajilla, la hembra pasará a "Inseminada" y se calculará el parto estimado (+114 días).</p>
-            <div className="flex justify-end gap-3">
-              <button type="button" onClick={onClose} className="btn-secondary">Cancelar</button>
-              <button type="submit" className="btn-primary">Confirmar Inseminación</button>
+            <div>
+              <label className="label">Fecha del Servicio</label>
+              <input type="date" className="input" value={date} onChange={e => setDate(e.target.value)} required />
             </div>
-          </form>
-        )}
+          </div>
+
+          {/* Solo en Inseminación Artificial: origen de la dosis */}
+          {isIA && (
+            <div>
+              <label className="label">Comentarios / Origen del Semen</label>
+              <textarea
+                className="input min-h-[76px] resize-y"
+                placeholder="Proveedor, casa genética, lote de la dosis…"
+                value={origenSemenNotas}
+                onChange={e => setOrigenSemenNotas(e.target.value)}
+              />
+              <p className="text-gray-500 text-xs mt-1">Especifica de dónde proviene la dosis utilizada.</p>
+            </div>
+          )}
+
+          <p className="text-gray-500 text-xs">
+            La hembra pasará a <span className="text-gray-300">Gestación</span> con parto estimado a +114 días.
+          </p>
+
+          {error && <p className="text-red-400 text-xs">{error}</p>}
+
+          <div className="flex justify-end gap-3">
+            <button type="button" onClick={onClose} className="btn-secondary">Cancelar</button>
+            <button type="submit" className="btn-primary">Registrar Servicio</button>
+          </div>
+        </form>
       </div>
     </div>
   );
@@ -188,7 +222,7 @@ export default function AnimalDetail({ animal: initial, onClose }: Props) {
   const deleteAnimal = useAppStore(s => s.deleteAnimal);
 
   const [showFarrowing, setShowFarrowing] = useState(false);
-  const [showInseminate, setShowInseminate] = useState(false);
+  const [showService, setShowService] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   // ---- Edición ----
@@ -207,18 +241,12 @@ export default function AnimalDetail({ animal: initial, onClose }: Props) {
     setEditing(false);
   }
 
-  const semenBatches = useAppStore(s => s.semenBatches);
-  const semenInfo = useMemo(() => {
-    const own = semenBatches.filter(b => b.padroteId === live.id);
-    if (!own.length) return null;
-    return {
-      available: own.reduce((acc, b) => acc + b.strawsAvailable, 0),
-      total: own.reduce((acc, b) => acc + b.strawsTotal, 0),
-      last: own.reduce((acc, b) => (b.date > acc ? b.date : acc), ''),
-    };
-  }, [semenBatches, live.id]);
-
-  const isMale = live.gender === 'Macho' || live.role === 'Padrote';
+  // Servicios/montas del animal: como hembra servida o como padrote responsable.
+  const services = useAppStore(s => s.services);
+  const animalServices = useMemo(
+    () => services.filter(s => s.animalId === live.id || s.padroteId === live.id),
+    [services, live.id],
+  );
 
   // Métricas derivadas
   const ageDays = Math.max(0, differenceInDays(safeParseISO(currentDate), safeParseISO(live.birthDate)) || 0);
@@ -341,19 +369,51 @@ export default function AnimalDetail({ animal: initial, onClose }: Props) {
             </div>
           </div>
 
-          {/* Semen del padrote */}
-          {isMale && semenInfo && (
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-              <h3 className="text-white font-semibold mb-3 flex items-center gap-2"><Droplet size={16} className="text-sky-400" /> Semen</h3>
-              <div className="flex flex-wrap items-end justify-between gap-3">
-                <div>
-                  <p className="text-3xl font-bold text-white">{semenInfo.available}</p>
-                  <p className="text-gray-500 text-xs">pajillas disponibles (de {semenInfo.total})</p>
-                </div>
-                <p className="text-gray-400 text-sm">Última extracción: <span className="text-white">{semenInfo.last || '—'}</span></p>
+          {/* Historial de servicios / montas */}
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <Syringe size={16} className="text-brand-400" /> Servicios / Montas
+              <span className="text-gray-500 text-sm font-normal">({animalServices.length})</span>
+            </h3>
+            {animalServices.length === 0 ? (
+              <p className="text-gray-600 text-sm">Sin servicios registrados.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-primary-800/40 text-gray-400">
+                    <tr>
+                      <th className="text-left px-3 py-2">Fecha</th>
+                      <th className="text-left px-3 py-2">Tipo</th>
+                      <th className="text-left px-3 py-2">Cerda</th>
+                      <th className="text-left px-3 py-2">Padrote</th>
+                      <th className="text-left px-3 py-2">Origen del semen</th>
+                      <th className="text-left px-3 py-2">Parto est.</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {animalServices.map(s => (
+                      <tr key={s.id} className="border-t border-gray-800">
+                        <td className="px-3 py-2 text-gray-400 whitespace-nowrap">{s.date}</td>
+                        <td className="px-3 py-2">
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                            s.tipoServicio === 'Inseminación Artificial'
+                              ? 'bg-sky-500/20 text-sky-400'
+                              : 'bg-brand-500/20 text-brand-300'
+                          }`}>
+                            {s.tipoServicio === 'Inseminación Artificial' ? 'I.A.' : 'Monta Natural'}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2 text-white font-medium">{s.animalTag}</td>
+                        <td className="px-3 py-2 text-gray-300">{s.padroteTag ?? '—'}</td>
+                        <td className="px-3 py-2 text-gray-400 text-xs">{s.origenSemenNotas ?? '—'}</td>
+                        <td className="px-3 py-2 text-gray-400 whitespace-nowrap">{s.expectedFarrowingDate ?? '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Historial de pesajes (editable) */}
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
@@ -459,8 +519,9 @@ export default function AnimalDetail({ animal: initial, onClose }: Props) {
 
           {/* Acciones */}
           <div className="flex flex-wrap gap-3">
-            {live.gender === 'Hembra' && live.heatStatus === 'En Celo' && (
-              <button onClick={() => setShowInseminate(true)} className="btn-primary flex items-center gap-2"><Syringe size={16} /> Inseminar</button>
+            {live.gender === 'Hembra' && live.status === 'Activo'
+              && !['Inseminada', 'Embarazada', 'Lactante'].includes(live.heatStatus ?? '') && (
+              <button onClick={() => setShowService(true)} className="btn-primary flex items-center gap-2"><Syringe size={16} /> Registrar Servicio</button>
             )}
             {live.heatStatus === 'Embarazada' && (
               <button onClick={() => setShowFarrowing(true)} className="btn-primary flex items-center gap-2"><Baby size={16} /> Registrar Parto</button>
@@ -476,7 +537,7 @@ export default function AnimalDetail({ animal: initial, onClose }: Props) {
       </div>
 
       {showFarrowing && <FarrowingModal mother={live} onClose={() => setShowFarrowing(false)} />}
-      {showInseminate && <InseminateModal female={live} onClose={() => setShowInseminate(false)} />}
+      {showService && <ServiceModal female={live} onClose={() => setShowService(false)} />}
 
       {/* Confirmación de borrado */}
       {confirmDelete && (

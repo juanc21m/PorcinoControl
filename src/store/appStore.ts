@@ -14,7 +14,7 @@ import type {
   KPIUpdate,
   MedicalTask,
   Supply,
-  SemenBatch,
+  Service,
 } from '../types';
 import { FEED_TYPES, LB_PER_SACO, ZONE_DEFAULT_FEED, DEFAULT_SUPPLY_MIN_STOCK } from '../types';
 import { safeParseISO } from '../lib/date';
@@ -37,8 +37,7 @@ import {
   setFeedInventory,
   insertSupply,
   updateSupply as dbUpdateSupply,
-  insertSemenBatch,
-  updateSemenBatch,
+  insertService,
 } from '../lib/db';
 
 // ---------------------------------------------------------------------------
@@ -81,7 +80,7 @@ interface AppState {
   sales: SaleInvoice[];
   contacts: Contact[];
   supplies: Supply[];
-  semenBatches: SemenBatch[];
+  services: Service[];
   currentDate: string;
   dismissedAlertIds: string[];
   completedTaskIds: string[];
@@ -124,16 +123,25 @@ interface AppState {
   importAnimals: (animals: Animal[]) => void;
   /** Importación masiva de inventario de alimentos (upsert por tipo). */
   importInventory: (rows: { feedType: FeedType; sacos: number; lb: number }[]) => void;
-  /** Inseminación: descuenta 1 pajilla del padrote y marca a la hembra Inseminada. */
-  inseminate: (femaleId: string, padroteId: string) => void;
+  /**
+   * Registra un servicio/monta: guarda el registro reproductivo y pasa a la
+   * hembra a Gestación con su fecha de parto estimada (+114 días).
+   */
+  registerService: (
+    femaleId: string,
+    data: {
+      tipoServicio: Service['tipoServicio'];
+      padroteId?: string;
+      date?: string;
+      origenSemenNotas?: string;
+    },
+  ) => void;
 
   // Insumos
   addSupply: (data: Omit<Supply, 'id'>) => void;
   updateSupply: (id: string, changes: Partial<Omit<Supply, 'id'>>) => void;
   adjustSupply: (id: string, delta: number) => void;
 
-  // Semen
-  addSemenBatch: (data: Omit<SemenBatch, 'id' | 'strawsAvailable'>) => void;
 
   // Finance actions
   addPurchase: (data: Omit<PurchaseInvoice, 'id'>) => void;
@@ -167,7 +175,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   sales: [],
   contacts: [],
   supplies: [],
-  semenBatches: [],
+  services: [],
   currentDate: CURRENT_DATE,
   dismissedAlertIds: [],
   completedTaskIds: [],
@@ -193,7 +201,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         inventory: data.inventory,
         inventoryHistory: data.inventoryHistory,
         supplies: data.supplies,
-        semenBatches: data.semenBatches,
+        services: data.services,
         loaded: true,
         loading: false,
       });
@@ -323,42 +331,56 @@ export const useAppStore = create<AppState>((set, get) => ({
     persist(upsertInventoryRows(rows), 'importInventory');
   },
 
-  inseminate: (femaleId, padroteId) => {
-    const { animals, semenBatches, currentDate } = get();
+  registerService: (femaleId, data) => {
+    const { animals, services, currentDate } = get();
     const female = animals.find(a => a.id === femaleId);
-    const padrote = animals.find(a => a.id === padroteId);
-    if (!female || !padrote) return;
+    if (!female) return;
 
-    // Pajilla disponible más antigua de ese padrote (FIFO).
-    const batch = semenBatches
-      .filter(b => b.padroteId === padroteId && b.strawsAvailable > 0)
-      .sort((a, b) => a.date.localeCompare(b.date))[0];
-    if (!batch) return; // sin stock de pajillas: la UI debe impedir llegar aquí
+    const padrote = data.padroteId ? animals.find(a => a.id === data.padroteId) : undefined;
+    const date = data.date ?? currentDate;
+    const expected = format(addDays(safeParseISO(date), 114), 'yyyy-MM-dd');
+    const isIA = data.tipoServicio === 'Inseminación Artificial';
 
-    const expected = format(addDays(safeParseISO(currentDate), 114), 'yyyy-MM-dd');
+    const newService: Service = {
+      id: crypto.randomUUID(),
+      animalId: female.id,
+      animalTag: female.tag,
+      tipoServicio: data.tipoServicio,
+      padroteId: data.padroteId,
+      padroteTag: padrote?.tag,
+      date,
+      // El origen de la dosis solo aplica a inseminación artificial.
+      origenSemenNotas: isIA ? (data.origenSemenNotas?.trim() || undefined) : undefined,
+      expectedFarrowingDate: expected,
+    };
+
     const femaleChanges: Partial<Animal> = {
       heatStatus: 'Inseminada',
-      inseminationDate: currentDate,
+      inseminationDate: date,
       expectedFarrowingDate: expected,
-      padrote_id: padroteId,
+      padrote_id: data.padroteId,
       etapaActual: 'Gestación',
       feedType: ZONE_DEFAULT_FEED['Gestación'],
     };
 
+    const detalle = [
+      data.tipoServicio,
+      padrote ? `padrote ${padrote.tag}` : null,
+      newService.origenSemenNotas ? `origen: ${newService.origenSemenNotas}` : null,
+    ].filter(Boolean).join(' · ');
+
     set({
-      semenBatches: semenBatches.map(b =>
-        b.id === batch.id ? { ...b, strawsAvailable: b.strawsAvailable - 1 } : b,
-      ),
+      services: [newService, ...services],
       animals: animals.map(a =>
         a.id === femaleId
-          ? { ...a, ...femaleChanges, history: [...a.history, { date: currentDate, event: `Inseminada con semen de ${padrote.tag} (parto estimado ${expected}).` }] }
+          ? { ...a, ...femaleChanges, history: [...a.history, { date, event: `Servicio registrado (${detalle}). Parto estimado ${expected}.` }] }
           : a,
       ),
     });
 
-    persist(updateSemenBatch(batch.id, { strawsAvailable: batch.strawsAvailable - 1 }), 'inseminate(pajilla)');
+    persist(insertService(newService), 'insertService');
     const f = get().animals.find(a => a.id === femaleId);
-    persist(updateAnimal(femaleId, { ...femaleChanges, history: f?.history }), 'inseminate(hembra)');
+    persist(updateAnimal(femaleId, { ...femaleChanges, history: f?.history }), 'registerService(hembra)');
   },
 
   addSupply: (data) => {
@@ -382,12 +404,6 @@ export const useAppStore = create<AppState>((set, get) => ({
     const quantity = Math.max(0, supply.quantity + delta);
     set({ supplies: get().supplies.map(s => (s.id === id ? { ...s, quantity } : s)) });
     persist(dbUpdateSupply(id, { quantity }), 'adjustSupply');
-  },
-
-  addSemenBatch: (data) => {
-    const newBatch: SemenBatch = { ...data, id: crypto.randomUUID(), strawsAvailable: data.strawsTotal };
-    set({ semenBatches: [newBatch, ...get().semenBatches] });
-    persist(insertSemenBatch(newBatch), 'insertSemenBatch');
   },
 
   addPurchase: (data) => {

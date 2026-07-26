@@ -9,7 +9,6 @@ import Traceability from './pages/Traceability';
 import Etapas from './pages/Etapas';
 import Inventory from './pages/Inventory';
 import Supplies from './pages/Supplies';
-import Semen from './pages/Semen';
 import Finances from './pages/Finances';
 import Contacts from './pages/Contacts';
 import Reports from './pages/Reports';
@@ -32,7 +31,6 @@ export default function App() {
             <Route path="/etapas" element={<Etapas />} />
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/supplies" element={<Supplies />} />
-            <Route path="/semen" element={<Semen />} />
             <Route path="/finances" element={<Finances />} />
             <Route path="/contacts" element={<Contacts />} />
             <Route path="/reports" element={<Reports />} />
