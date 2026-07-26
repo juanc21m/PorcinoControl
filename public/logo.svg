@@ -1,0 +1,24 @@
+<svg viewBox="0 0 1180 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Agro Comercial Moreno">
+  <!-- Emblema: disco con inicial M sobre campo -->
+  <g>
+    <circle cx="160" cy="160" r="132" fill="none" stroke="#2B2E34" stroke-width="14"/>
+    <circle cx="160" cy="160" r="108" fill="#FFFFFF"/>
+    <!-- campo -->
+    <path d="M60 214 C104 188 216 188 260 214 C216 246 104 246 60 214 Z" fill="#2E9437"/>
+    <path d="M74 226 C130 250 190 250 246 226 C196 250 124 250 74 226 Z" fill="#1C7A28"/>
+    <!-- silo / inicial -->
+    <rect x="118" y="82" width="84" height="24" rx="8" fill="none" stroke="#2B2E34" stroke-width="10"/>
+    <rect x="112" y="118" width="96" height="80" rx="12" fill="none" stroke="#2B2E34" stroke-width="10"/>
+    <text x="160" y="176" font-family="system-ui, 'Segoe UI', Roboto, sans-serif" font-size="62"
+          font-weight="700" fill="#2B2E34" text-anchor="middle">M</text>
+    <!-- espigas laterales -->
+    <rect x="76" y="130" width="22" height="70" rx="11" fill="#2B2E34"/>
+    <rect x="222" y="130" width="22" height="70" rx="11" fill="#2B2E34"/>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="330" y="146" font-family="system-ui, 'Segoe UI', Roboto, sans-serif" font-size="70"
+        font-weight="700" letter-spacing="1" fill="#2B2E34">AGRO COMERCIAL</text>
+  <text x="330" y="248" font-family="system-ui, 'Segoe UI', Roboto, sans-serif" font-size="104"
+        font-weight="800" letter-spacing="1" fill="#2E9437">MORENO</text>
+</svg>

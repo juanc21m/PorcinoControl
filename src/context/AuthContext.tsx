@@ -25,6 +25,8 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   isAdmin: boolean;
   loading: boolean;
+  /** true si no se pudo contactar al backend de autenticación. */
+  backendDown: boolean;
   /** Devuelve un mensaje de error (string) o `null` si el login fue exitoso. */
   login: (email: string, password: string) => Promise<string | null>;
   logout: () => Promise<void>;
@@ -35,16 +37,40 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [backendDown, setBackendDown] = useState(false);
 
   useEffect(() => {
     let mounted = true;
+    let settled = false;
+
+    // Red de seguridad: si la petición se queda colgada (p. ej. el host del
+    // backend no resuelve), igual liberamos la UI para no dejar la pantalla
+    // en blanco esperando indefinidamente.
+    const watchdog = setTimeout(() => {
+      if (!mounted || settled) return;
+      console.error('[auth] getSession() no respondió a tiempo; se libera la UI.');
+      setBackendDown(true);
+      setLoading(false);
+    }, 8000);
 
     // Restaura la sesión persistida (si existe) al cargar la app.
-    supabase.auth.getSession().then(({ data }) => {
-      if (!mounted) return;
-      setSession(data.session);
-      setLoading(false);
-    });
+    // El .catch() es obligatorio: si el backend no responde, getSession() se
+    // rechaza y sin él `loading` se quedaba en true para siempre, dejando la
+    // pantalla en blanco (la app nunca llegaba a renderizar el formulario).
+    supabase.auth.getSession()
+      .then(({ data }) => {
+        if (!mounted) return;
+        setSession(data.session);
+      })
+      .catch((err) => {
+        console.error('[auth] no se pudo contactar al servidor de sesión:', err);
+        if (mounted) setBackendDown(true);
+      })
+      .finally(() => {
+        settled = true;
+        clearTimeout(watchdog);
+        if (mounted) setLoading(false);
+      });
 
     // Mantiene el estado sincronizado con login / logout / refresh de token.
     const { data: sub } = supabase.auth.onAuthStateChange((_event, nextSession) => {
@@ -53,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       mounted = false;
+      clearTimeout(watchdog);
       sub.subscription.unsubscribe();
     };
   }, []);
@@ -74,7 +101,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async (): Promise<void> => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      // Si el backend no responde, igual cerramos la sesión localmente para no
+      // dejar al usuario atrapado dentro de la app.
+      console.error('[auth] signOut falló; se limpia la sesión local:', err);
+      setSession(null);
+    }
   };
 
   const user = session?.user ?? null;
@@ -89,6 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthenticated: !!session,
     isAdmin: role === 'admin',
     loading,
+    backendDown,
     login,
     logout,
   };

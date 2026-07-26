@@ -34,7 +34,7 @@ const FLOATERS: { Icon: LucideIcon; left: string; top: string; size: number; op:
 ];
 
 export default function Login() {
-  const { login, isAuthenticated, loading } = useAuth();
+  const { login, isAuthenticated, loading, backendDown } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -108,6 +108,16 @@ export default function Login() {
           <img src={LOGO_URL} alt={APP_NAME} className="w-full max-w-[200px] h-auto object-contain" />
           <p className="text-gray-500 text-xs mt-2">ERP · Gestión Porcina</p>
         </div>
+
+        {backendDown && (
+          <div className="mb-4 flex items-start gap-2 bg-amber-50 border border-amber-300 rounded-lg px-3 py-2.5 text-xs text-amber-800">
+            <AlertCircle size={14} className="shrink-0 mt-0.5" />
+            <span>
+              No se puede contactar al servidor. Es posible que el proyecto de la base de datos
+              esté pausado. Revisa el panel de Supabase y reactívalo.
+            </span>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

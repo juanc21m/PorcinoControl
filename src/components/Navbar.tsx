@@ -32,8 +32,12 @@ export default function Navbar({ open, onClose }: NavbarProps) {
 
   const handleLogout = async () => {
     onClose();
-    await logout();
-    navigate('/login', { replace: true });
+    try {
+      await logout();
+    } finally {
+      // Salimos al login incluso si el backend falló al cerrar sesión.
+      navigate('/login', { replace: true });
+    }
   };
 
   return (
