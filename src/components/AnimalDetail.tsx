@@ -197,7 +197,7 @@ function ServiceModal({ female, onClose }: { female: Animal; onClose: () => void
 const statusColors: Record<string, string> = {
   'Activo':            'bg-green-500/20 text-green-400',
   'Despachado':        'bg-gray-500/20 text-gray-400',
-  'Fallecido':         'bg-red-500/20 text-red-400',
+  'Muerto':         'bg-red-500/20 text-red-400',
   'Descarte/Matadero': 'bg-orange-500/20 text-orange-400',
   'En Celo':           'bg-pink-500/20 text-pink-400',
   'Inseminada':        'bg-blue-500/20 text-blue-400',

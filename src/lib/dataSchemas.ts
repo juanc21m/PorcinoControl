@@ -11,7 +11,7 @@ import { FEED_TYPES, ETAPAS, ZONE_DEFAULT_FEED } from '../types';
  */
 
 const GENDERS = ['Macho', 'Hembra'] as const;
-const STATUSES: AnimalStatus[] = ['Activo', 'Despachado', 'Fallecido', 'Descarte/Matadero'];
+const STATUSES: AnimalStatus[] = ['Activo', 'Despachado', 'Muerto', 'Descarte/Matadero'];
 const ROLES: AnimalRole[] = ['Madre', 'Padrote', 'Ceba'];
 const HEATS: HeatStatus[] = ['En Celo', 'Inseminada', 'Embarazada', 'Lactante', 'Vacía', 'Abierta'];
 
@@ -113,7 +113,7 @@ export function buildWeightsCSV(animals: Animal[]): { headers: string[]; rows: (
 export function buildMortalityCSV(animals: Animal[]): { headers: string[]; rows: (string | number)[][] } {
   const headers = ['tag', 'gender', 'breed', 'birthDate', 'status', 'etapaActual'];
   const rows = animals
-    .filter(a => a.status === 'Fallecido' || a.status === 'Descarte/Matadero')
+    .filter(a => a.status === 'Muerto' || a.status === 'Descarte/Matadero')
     .map(a => [a.tag, a.gender, a.breed, a.birthDate, a.status, a.etapaActual]);
   return { headers, rows };
 }

@@ -1,9 +1,9 @@
 export type AnimalRole = 'Madre' | 'Padrote' | 'Ceba';
-export type AnimalStatus = 'Activo' | 'Despachado' | 'Fallecido' | 'Descarte/Matadero';
+export type AnimalStatus = 'Activo' | 'Despachado' | 'Muerto' | 'Descarte/Matadero';
 export type HeatStatus = 'En Celo' | 'Inseminada' | 'Embarazada' | 'Lactante' | 'Vacía' | 'Abierta';
 
 export const ANIMAL_ROLES: readonly AnimalRole[] = ['Madre', 'Padrote', 'Ceba'] as const;
-export const ANIMAL_STATUSES: readonly AnimalStatus[] = ['Activo', 'Despachado', 'Fallecido', 'Descarte/Matadero'] as const;
+export const ANIMAL_STATUSES: readonly AnimalStatus[] = ['Activo', 'Despachado', 'Muerto', 'Descarte/Matadero'] as const;
 export const HEAT_STATUSES: readonly HeatStatus[] = ['En Celo', 'Inseminada', 'Embarazada', 'Lactante', 'Vacía', 'Abierta'] as const;
 export type FeedType =
   | 'Gestación'
@@ -136,6 +136,9 @@ export interface Animal {
   totalFarrowings?: number;
   madre_id?: string;
   padrote_id?: string;
+  /** Control de mortalidad (exigencia de salud animal). */
+  deathDate?: string;   // fecha_muerte
+  deathCause?: string;  // causa_muerte
   weights: { date: string; weight: number }[];
   vaccinations: { date: string; vaccine: string }[];
   history: { date: string; event: string }[];

@@ -20,7 +20,7 @@ CREATE TABLE animals (
   feed_type     VARCHAR(12) NOT NULL CHECK (feed_type IN ('Crecimiento','Engorde','Lactancia')),
   daily_consumption DECIMAL(5,2) NOT NULL,
   status        VARCHAR(18) NOT NULL DEFAULT 'Activo'
-                CHECK (status IN ('Activo','Despachado','Fallecido','Descarte/Matadero')),
+                CHECK (status IN ('Activo','Despachado','Muerto','Descarte/Matadero')),
   heat_status   VARCHAR(12) CHECK (heat_status IN ('En Celo','Inseminada','Embarazada','Lactante','Vacía','Abierta')),
   last_heat_date        DATE,
   insemination_date     DATE,

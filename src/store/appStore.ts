@@ -166,6 +166,11 @@ interface AppState {
     },
   ) => void;
   updateAnimalStatus: (id: string, status: Animal['status']) => void;
+  /**
+   * Registra la baja/muerte de un animal: pasa a estado 'Muerto' y guarda la
+   * fecha y la causa (exigencia de control sanitario).
+   */
+  registerDeath: (id: string, cause: string, date?: string) => void;
   /** Corrige el conteo de la camada actual de una cerda en Maternidad. */
   updateLitter: (motherId: string, males: number, females: number) => void;
   /** Reubica un animal a otra sala dentro de su zona. */
@@ -489,6 +494,26 @@ export const useAppStore = create<AppState>((set, get) => ({
   updateAnimalStatus: (id, status) => {
     set({ animals: get().animals.map(a => (a.id === id ? { ...a, status } : a)) });
     persist(updateAnimal(id, { status }), 'updateAnimalStatus');
+  },
+
+  registerDeath: (id, cause, date) => {
+    const { animals, currentDate } = get();
+    const animal = animals.find(a => a.id === id);
+    if (!animal) return;
+
+    const when = date ?? currentDate;
+    const changes: Partial<Animal> = {
+      status: 'Muerto',
+      deathDate: when,
+      deathCause: cause.trim() || 'Sin especificar',
+      history: [
+        ...animal.history,
+        { date: when, event: `Baja registrada en ${animal.etapaActual}. Causa: ${cause.trim() || 'sin especificar'}` },
+      ],
+    };
+
+    set({ animals: animals.map(a => (a.id === id ? { ...a, ...changes } : a)) });
+    persist(updateAnimal(id, changes), 'registerDeath');
   },
 
   editAnimal: (id, changes) => {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Baby, Truck, Search, Eye, Filter } from 'lucide-react';
+import { Baby, Truck, Search, Eye, Filter, HeartCrack, ClipboardList, PiggyBank } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import AnimalForm from '../components/AnimalForm';
 import RegisterBirthForm from '../components/RegisterBirthForm';
@@ -10,7 +10,7 @@ import type { Animal } from '../types';
 const statusColors: Record<string, string> = {
   Activo:              'bg-green-500/20 text-green-400',
   Despachado:          'bg-gray-500/20 text-gray-400',
-  Fallecido:           'bg-red-500/20 text-red-400',
+  Muerto:              'bg-red-500/20 text-red-400',
   'Descarte/Matadero': 'bg-orange-500/20 text-orange-400',
 };
 
@@ -23,6 +23,61 @@ const heatColors: Record<string, string> = {
   'Abierta':   'text-amber-400',
 };
 
+/** Modal de registro de baja: pide la causa y confirma la acción. */
+function DeathModal({ animal, onClose }: { animal: Animal; onClose: () => void }) {
+  const registerDeath = useAppStore(s => s.registerDeath);
+  const currentDate = useAppStore(s => s.currentDate);
+  const [cause, setCause] = useState('');
+  const [date, setDate] = useState(currentDate);
+  const [error, setError] = useState('');
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!cause.trim()) { setError('Indica la causa del deceso.'); return; }
+    registerDeath(animal.id, cause, date);
+    onClose();
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[60] p-4">
+      <div className="bg-gray-900 border border-red-800/50 rounded-xl p-6 w-full max-w-md">
+        <h3 className="text-gray-50 font-semibold mb-1 flex items-center gap-2">
+          <HeartCrack size={18} className="text-red-400" /> Registrar Baja / Muerte
+        </h3>
+        <p className="text-gray-400 text-sm mb-4">
+          Animal <b className="text-gray-50 font-mono">{animal.tag}</b> ({animal.etapaActual}
+          {animal.roomNumber ? ` · Sala ${animal.roomNumber}` : ''}). Pasará a estado
+          <b className="text-red-400"> Muerto</b> y quedará en la bitácora de mortalidad.
+        </p>
+
+        <form onSubmit={submit} className="space-y-4">
+          <div>
+            <label className="label">Fecha de la muerte</label>
+            <input type="date" className="input" value={date} onChange={e => setDate(e.target.value)} required />
+          </div>
+          <div>
+            <label className="label">Causa / Notas del deceso</label>
+            <textarea
+              className="input min-h-[84px] resize-y"
+              placeholder="Ej.: neumonía, aplastamiento, causa desconocida…"
+              value={cause}
+              onChange={e => setCause(e.target.value)}
+              required
+            />
+          </div>
+          {error && <p className="text-red-400 text-xs">{error}</p>}
+          <div className="flex justify-end gap-3">
+            <button type="button" onClick={onClose} className="btn-secondary">Cancelar</button>
+            <button type="submit" className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-red-600 hover:bg-red-500 text-white">
+              <HeartCrack size={15} /> Confirmar Baja
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function Traceability() {
   const animals = useAppStore(s => s.animals);
   const [showBirth, setShowBirth] = useState(false);
@@ -30,13 +85,22 @@ export default function Traceability() {
   const [selected, setSelected] = useState<Animal | null>(null);
   const [search, setSearch] = useState('');
   const [filterRole, setFilterRole] = useState('Todos');
+  const [tab, setTab] = useState<'activos' | 'bajas'>('activos');
+  const [deathTarget, setDeathTarget] = useState<Animal | null>(null);
 
-  const filtered = animals.filter(a => {
-    const matchSearch = a.tag.toLowerCase().includes(search.toLowerCase()) ||
-      a.breed.toLowerCase().includes(search.toLowerCase());
+  const matches = (a: Animal) => {
+    const q = search.toLowerCase();
+    const matchSearch = a.tag.toLowerCase().includes(q) || a.breed.toLowerCase().includes(q);
     const matchRole = filterRole === 'Todos' || a.role === filterRole;
     return matchSearch && matchRole;
-  });
+  };
+
+  // Vivos (todo lo que no es baja) vs. bitácora de mortalidad.
+  const filtered = animals.filter(a => a.status !== 'Muerto').filter(matches);
+  const deaths = animals
+    .filter(a => a.status === 'Muerto')
+    .filter(matches)
+    .sort((x, y) => (y.deathDate ?? '').localeCompare(x.deathDate ?? ''));
 
   return (
     <div className="space-y-6">
@@ -82,6 +146,25 @@ export default function Traceability() {
         </div>
       </div>
 
+      {/* Tabs: activos vs bitácora de mortalidad */}
+      <div className="flex gap-1 bg-gray-900 border border-gray-800 rounded-xl p-1 w-fit">
+        {([
+          { key: 'activos', label: 'Cerdos Activos', icon: PiggyBank, count: filtered.length },
+          { key: 'bajas',   label: 'Bitácora de Mortalidad', icon: ClipboardList, count: deaths.length },
+        ] as const).map(({ key, label, icon: Icon, count }) => (
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              tab === key ? 'bg-brand-500/15 text-brand-400' : 'text-gray-400 hover:text-gray-50'
+            }`}
+          >
+            <Icon size={15} /> {label}
+            <span className="text-xs tabular-nums opacity-70">({count})</span>
+          </button>
+        ))}
+      </div>
+
       {/* Stats row */}
       <div className="grid grid-cols-4 gap-3">
         {[
@@ -97,7 +180,8 @@ export default function Traceability() {
         ))}
       </div>
 
-      {/* Table */}
+      {/* Tabla de activos */}
+      {tab === 'activos' && (
       <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -139,12 +223,22 @@ export default function Traceability() {
                   <td className="px-4 py-3 text-gray-400">{animal.birthDate}</td>
                   <td className="px-4 py-3 text-gray-400 text-xs">{animal.feedType}</td>
                   <td className="px-4 py-3">
-                    <button
-                      onClick={() => setSelected(animal)}
-                      className="text-gray-400 hover:text-brand-400 transition-colors p-1 rounded hover:bg-gray-700"
-                    >
-                      <Eye size={16} />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setSelected(animal)}
+                        title="Ver ficha"
+                        className="text-gray-400 hover:text-brand-400 transition-colors p-1 rounded hover:bg-gray-700"
+                      >
+                        <Eye size={16} />
+                      </button>
+                      <button
+                        onClick={() => setDeathTarget(animal)}
+                        title="Registrar baja / muerte"
+                        className="text-gray-400 hover:text-red-400 transition-colors p-1 rounded hover:bg-gray-700"
+                      >
+                        <HeartCrack size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -157,7 +251,46 @@ export default function Traceability() {
           </table>
         </div>
       </div>
+      )}
 
+      {/* Bitácora de Mortalidad — vista para autoridades de salud */}
+      {tab === 'bajas' && (
+        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+          <div className="px-5 py-3 border-b border-gray-800 flex items-center gap-2">
+            <ClipboardList size={16} className="text-red-400" />
+            <h3 className="text-gray-50 font-semibold">Bitácora de Mortalidad</h3>
+            <span className="text-gray-500 text-sm">({deaths.length})</span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-800/60 text-gray-400">
+                <tr>
+                  <th className="text-left px-4 py-3">ID / Arete</th>
+                  <th className="text-left px-4 py-3">Zona donde estaba</th>
+                  <th className="text-left px-4 py-3">Fecha de Muerte</th>
+                  <th className="text-left px-4 py-3">Causa / Notas</th>
+                </tr>
+              </thead>
+              <tbody>
+                {deaths.length === 0 ? (
+                  <tr><td colSpan={4} className="px-4 py-8 text-center text-gray-600">Sin bajas registradas.</td></tr>
+                ) : deaths.map(a => (
+                  <tr key={a.id} className="border-t border-gray-800 hover:bg-gray-800/30">
+                    <td className="px-4 py-3 font-mono text-brand-400 font-semibold">{a.tag}</td>
+                    <td className="px-4 py-3 text-gray-300">
+                      {a.etapaActual}{a.roomNumber ? ` · Sala ${a.roomNumber}` : ''}
+                    </td>
+                    <td className="px-4 py-3 text-gray-300 whitespace-nowrap">{a.deathDate ?? '—'}</td>
+                    <td className="px-4 py-3 text-gray-400">{a.deathCause ?? '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {deathTarget && <DeathModal animal={deathTarget} onClose={() => setDeathTarget(null)} />}
       {showBirth && <RegisterBirthForm onClose={() => setShowBirth(false)} />}
       {showIntake && <AnimalForm onClose={() => setShowIntake(false)} />}
       {selected && <AnimalDetail animal={selected} onClose={() => setSelected(null)} />}

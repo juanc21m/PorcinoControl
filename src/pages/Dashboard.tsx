@@ -3,11 +3,12 @@ import {
   getYear, getMonth, getDate, getDaysInMonth, format,
 } from 'date-fns';
 import { safeParseISO } from '../lib/date';
+import { differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts';
-import { AlertTriangle, AlertCircle, Info, Baby, Bell, CheckCircle2, X } from 'lucide-react';
+import { AlertTriangle, AlertCircle, Info, Baby, Bell, CheckCircle2, X, HeartCrack } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { ETAPAS, ETAPA_CAPACITY, FEED_TYPES } from '../types';
 import type { EtapaProductiva, AlertSeverity } from '../types';
@@ -95,6 +96,16 @@ export default function Dashboard() {
     });
   }, [animals, natMode, natDate]);
 
+  // Mortalidad de los últimos 7 días (control sanitario).
+  const deaths7d = useMemo(() => {
+    const ref = safeParseISO(currentDate);
+    return animals.filter(a => {
+      if (a.status !== 'Muerto' || !a.deathDate) return false;
+      const d = differenceInDays(ref, safeParseISO(a.deathDate));
+      return !isNaN(d) && d >= 0 && d <= 7;
+    }).length;
+  }, [animals, currentDate]);
+
   const criticalCount = alerts.filter(a => a.severity === 'critical').length;
   const totalActive = animals.filter(a => a.status === 'Activo').length;
   const totalSacos = Object.values(inventory).reduce((acc, v) => acc + v.sacos, 0);
@@ -105,6 +116,32 @@ export default function Dashboard() {
       <div>
         <h1 className="text-2xl font-bold text-gray-50">Dashboard</h1>
         <p className="text-gray-400 text-sm mt-0.5">Resumen operativo en tiempo real · {currentDate}</p>
+      </div>
+
+      {/* Métrica sanitaria: mortalidad reciente */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div className={`bg-gray-900 border rounded-2xl p-5 shadow-sm flex items-center gap-4 ${
+          deaths7d > 0 ? 'border-red-700/50' : 'border-gray-800'
+        }`}>
+          <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
+            deaths7d > 0 ? 'bg-red-500/15 text-red-400' : 'bg-gray-800 text-gray-500'
+          }`}>
+            <HeartCrack size={24} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-gray-400 text-[11px] font-medium uppercase tracking-wider">
+              Mortalidad (últimos 7 días)
+            </p>
+            <p className={`text-3xl font-bold leading-none mt-1 tabular-nums ${
+              deaths7d > 0 ? 'text-red-400' : 'text-gray-50'
+            }`}>
+              {deaths7d}
+            </p>
+            <p className="text-gray-500 text-[11px] mt-1">
+              {deaths7d === 1 ? 'animal dado de baja' : 'animales dados de baja'}
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* 1. Inventario de animales por zona */}

@@ -62,6 +62,8 @@ function animalToRow(a: Animal): Row {
     total_farrowings: a.totalFarrowings ?? 0,
     madre_id: a.madre_id ?? null,
     padrote_id: a.padrote_id ?? null,
+    fecha_muerte: a.deathDate ?? null,
+    causa_muerte: a.deathCause ?? null,
     weights: a.weights,
     vaccinations: a.vaccinations,
     history: a.history,
@@ -94,6 +96,8 @@ function rowToAnimal(r: Row): Animal {
     totalFarrowings: (r.total_farrowings as number) ?? undefined,
     madre_id: (r.madre_id as string) ?? undefined,
     padrote_id: (r.padrote_id as string) ?? undefined,
+    deathDate: (r.fecha_muerte as string) ?? undefined,
+    deathCause: (r.causa_muerte as string) ?? undefined,
     weights: (r.weights as Animal['weights']) ?? [],
     vaccinations: (r.vaccinations as Animal['vaccinations']) ?? [],
     history: (r.history as Animal['history']) ?? [],
@@ -110,6 +114,7 @@ const ANIMAL_COL: Record<string, string> = {
   inseminationDate: 'insemination_date', expectedFarrowingDate: 'expected_farrowing_date',
   lastFarrowingDate: 'last_farrowing_date', lastWeaningDate: 'last_weaning_date',
   totalFarrowings: 'total_farrowings', madre_id: 'madre_id', padrote_id: 'padrote_id',
+  deathDate: 'fecha_muerte', deathCause: 'causa_muerte',
   weights: 'weights', vaccinations: 'vaccinations', history: 'history',
 };
 
