@@ -42,9 +42,22 @@ export default function Dashboard() {
   const etapaCounts = useMemo(() => {
     const counts = Object.fromEntries(ETAPAS.map(e => [e, 0])) as Record<EtapaProductiva, number>;
     for (const a of animals) {
-      if (a.status === 'Activo') counts[a.etapaActual]++;
+      // Solo se suma si la zona es conocida: antes `counts[zona]++` sobre una
+      // zona inexistente (p. ej. una renombrada en la BD pero no en el código)
+      // daba NaN y el animal desaparecía de los totales sin avisar.
+      if (a.status === 'Activo' && a.etapaActual in counts) counts[a.etapaActual]++;
     }
     return counts;
+  }, [animals]);
+
+  // Animales cuya zona no existe en el sistema: delatan un desajuste de datos
+  // en vez de esconderlo (por ejemplo, filas que quedaron con una zona vieja).
+  const zonasDesconocidas = useMemo(() => {
+    const validas = new Set<string>(ETAPAS);
+    const fuera = animals.filter(a => a.status === 'Activo' && !validas.has(a.etapaActual));
+    const porZona = new Map<string, number>();
+    for (const a of fuera) porZona.set(a.etapaActual, (porZona.get(a.etapaActual) ?? 0) + 1);
+    return [...porZona.entries()];
   }, [animals]);
 
   // -------------------------------------------------------------------------
@@ -117,6 +130,19 @@ export default function Dashboard() {
         <h1 className="text-2xl font-bold text-gray-50">Dashboard</h1>
         <p className="text-gray-400 text-sm mt-0.5">Resumen operativo en tiempo real · {currentDate}</p>
       </div>
+
+      {/* Aviso de integridad: animales en zonas que el sistema no reconoce */}
+      {zonasDesconocidas.length > 0 && (
+        <div className="flex items-start gap-2 bg-amber-500/10 border border-amber-500/30 rounded-lg px-4 py-2.5 text-sm text-amber-300">
+          <AlertTriangle size={15} className="shrink-0 mt-0.5" />
+          <span>
+            Hay animales en zonas que el sistema no reconoce y por eso <b>no aparecen</b> en
+            los totales:{' '}
+            {zonasDesconocidas.map(([z, n]) => `${n} en "${z}"`).join(' · ')}.
+            Corrige `etapa_actual` en la base de datos.
+          </span>
+        </div>
+      )}
 
       {/* Métrica sanitaria: mortalidad reciente */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">

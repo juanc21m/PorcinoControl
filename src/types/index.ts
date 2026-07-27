@@ -40,14 +40,14 @@ export const LB_PER_SACO: Record<FeedType, number> = {
 export type EtapaProductiva =
   | 'Gestación'
   | 'Maternidad'
-  | 'Recién Nacidos'
+  | 'Lechones'
   | 'Destete'
   | 'Ceba';
 
 export const ETAPAS: readonly EtapaProductiva[] = [
   'Gestación',
   'Maternidad',
-  'Recién Nacidos',
+  'Lechones',
   'Destete',
   'Ceba',
 ] as const;
@@ -74,7 +74,7 @@ export const ZONES: Record<EtapaProductiva, ZoneConfig> = {
   'Gestación':      { rooms: 1,  capacityPerRoom: 200, roomLabel: () => 'Sala Principal' },
   'Maternidad':     { rooms: 23, capacityPerRoom: 1,   roomLabel: (n) => `Sala ${n}` },
   // Lechones ya individualizados (con ID) que siguen mamando, antes del destete.
-  'Recién Nacidos': { rooms: 1,  capacityPerRoom: 500, roomLabel: () => 'Sala Principal' },
+  'Lechones': { rooms: 1,  capacityPerRoom: 500, roomLabel: () => 'Sala Principal' },
   'Destete':        { rooms: 1,  capacityPerRoom: 300, roomLabel: () => 'Sala Principal' },
   'Ceba':           { rooms: 1,  capacityPerRoom: 500, roomLabel: () => 'Sala Principal' },
 };
@@ -88,7 +88,7 @@ export const ETAPA_CAPACITY: Record<EtapaProductiva, number> = Object.fromEntrie
 export const ZONE_DEFAULT_FEED: Record<EtapaProductiva, FeedType> = {
   'Gestación': 'Gestación',
   Maternidad: 'Lactancia',
-  'Recién Nacidos': 'Lactancia',
+  'Lechones': 'Lactancia',
   Destete: 'Fase 1',
   Ceba: 'Engorde',
 };
@@ -100,7 +100,7 @@ export const ZONE_DEFAULT_FEED: Record<EtapaProductiva, FeedType> = {
 export const ZONE_ALLOWED_FEEDS: Record<EtapaProductiva, FeedType[]> = {
   'Gestación': ['Gestación'],
   Maternidad: ['Lactancia'],
-  'Recién Nacidos': ['Lactancia', 'Fase 1'],
+  'Lechones': ['Lactancia', 'Fase 1'],
   Destete: ['Fase 1', 'Fase 2', 'Fase 3'],
   Ceba: ['Engorde'],
 };
@@ -311,7 +311,7 @@ export interface SaleInvoice {
 export type AlertSeverity = 'info' | 'warning' | 'critical';
 
 /** Las áreas operativas que agrupan alertas en el Dashboard. */
-export type AlertType = 'Gestación' | 'Maternidad' | 'Recién Nacidos' | 'Destete' | 'Ceba' | 'Inventario';
+export type AlertType = 'Gestación' | 'Maternidad' | 'Lechones' | 'Destete' | 'Ceba' | 'Inventario';
 
 export interface Alert {
   id: string;

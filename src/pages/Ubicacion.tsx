@@ -12,7 +12,7 @@ import AnimalDetail from '../components/AnimalDetail';
 const ZONE_META: Record<EtapaProductiva, { icon: LucideIcon; accent: string; desc: string }> = {
   'Gestación': { icon: HeartPulse, accent: 'text-pink-400',   desc: 'Cerdas servidas / gestantes' },
   Maternidad:  { icon: Baby,       accent: 'text-purple-400', desc: 'Una cerda por sala, con su camada' },
-  'Recién Nacidos': { icon: Baby,  accent: 'text-sky-400',    desc: 'Lechones con ID, aún lactando' },
+  'Lechones':  { icon: Baby,      accent: 'text-sky-400',    desc: 'Lechones con arete, aún lactando' },
   Destete:     { icon: Wheat,      accent: 'text-amber-400',  desc: 'Lechones destetados' },
   Ceba:        { icon: Scale,      accent: 'text-brand-400',  desc: 'Engorde hasta venta' },
 };

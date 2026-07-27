@@ -49,7 +49,7 @@ alter table public.animals alter column role drop not null;
 
 alter table public.animals drop constraint if exists animals_etapa_actual_check;
 alter table public.animals add constraint animals_etapa_actual_check
-  check (etapa_actual in ('Gestación','Maternidad','Recién Nacidos','Destete','Ceba'));
+  check (etapa_actual in ('Gestación','Maternidad','Lechones','Destete','Ceba'));
 
 alter table public.animals drop constraint if exists animals_feed_type_check;
 alter table public.animals add constraint animals_feed_type_check

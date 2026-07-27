@@ -48,7 +48,7 @@ export default function Movilizacion() {
   const { email } = useAuth();
   const user = email ?? 'desconocido';
 
-  const [fromZone, setFromZone] = useState<EtapaProductiva>('Recién Nacidos');
+  const [fromZone, setFromZone] = useState<EtapaProductiva>('Lechones');
   const [fromRoom, setFromRoom] = useState<number | 'all'>('all');
   const [toZone, setToZone] = useState<EtapaProductiva>('Destete');
   const [toRoom, setToRoom] = useState<number | 'all'>('all');

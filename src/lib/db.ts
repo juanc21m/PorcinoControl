@@ -402,7 +402,10 @@ export interface AllData {
 
 export async function fetchAllData(): Promise<AllData> {
   const [animalsRes, contactsRes, purchasesRes, salesRes, invRes, txRes, suppliesRes, servicesRes, transfersRes] = await Promise.all([
-    supabase.from('animals').select('*').order('created_at', { ascending: true }),
+    // .range() explícito: sin él, si el proyecto tiene `db-max-rows` (Supabase
+    // suele traer 1000), la lectura se truncaría EN SILENCIO y las zonas
+    // aparecerían con menos animales de los que hay.
+    supabase.from('animals').select('*').order('created_at', { ascending: true }).range(0, 99999),
     supabase.from('contacts').select('*').order('created_at', { ascending: true }),
     supabase.from('purchase_invoices').select('*').order('date', { ascending: false }),
     supabase.from('sale_invoices').select('*').order('date', { ascending: false }),
