@@ -79,6 +79,22 @@ export default function Ubicacion() {
 
   const inZone = (z: EtapaProductiva) => active.filter(a => a.etapaActual === z);
 
+  /**
+   * Lechones por madre, DERIVADOS de los animales reales de la zona 'Lechones'.
+   * Se calcula, no se almacena: así Maternidad los refleja ("arrastrados") sin
+   * duplicar el conteo en los totales del sistema.
+   */
+  const litterByMother = useMemo(() => {
+    const m = new Map<string, { machos: number; hembras: number }>();
+    for (const a of active) {
+      if (a.etapaActual !== 'Lechones' || !a.madre_id) continue;
+      const cur = m.get(a.madre_id) ?? { machos: 0, hembras: 0 };
+      if (a.gender === 'Macho') cur.machos++; else cur.hembras++;
+      m.set(a.madre_id, cur);
+    }
+    return m;
+  }, [active]);
+
   return (
     <div className="space-y-6">
       <div>
@@ -99,7 +115,10 @@ export default function Ubicacion() {
 
           // En Maternidad los lechones son conteo de camada, no ocupantes de sala.
           const pigletTotal = isMaternity
-            ? occupants.reduce((acc, s) => acc + (s.litterMales ?? 0) + (s.litterFemales ?? 0), 0)
+            ? occupants.reduce((acc, s) => {
+                const d = litterByMother.get(s.id);
+                return acc + (d ? d.machos + d.hembras : (s.litterMales ?? 0) + (s.litterFemales ?? 0));
+              }, 0)
             : 0;
 
           const over = occupants.length > capTotal;
@@ -149,8 +168,9 @@ export default function Ubicacion() {
                     <ul className="divide-y divide-gray-800">
                       {Array.from({ length: cfg.rooms }, (_, i) => i + 1).map(n => {
                         const sow = occupants.find(a => a.roomNumber === n);
-                        const m = sow?.litterMales ?? 0;
-                        const f = sow?.litterFemales ?? 0;
+                        const der = sow ? litterByMother.get(sow.id) : undefined;
+                        const m = der?.machos ?? sow?.litterMales ?? 0;
+                        const f = der?.hembras ?? sow?.litterFemales ?? 0;
                         const tot = m + f;
                         return (
                           <li key={n} className="px-4 sm:px-5 py-3">
