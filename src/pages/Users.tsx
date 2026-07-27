@@ -12,7 +12,7 @@ import type { Profile, UserRole } from '../types';
 const MIN_TEMP_LEN = 8;
 
 export default function Users() {
-  const { isAdmin, user: me } = useAuth();
+  const { isAdmin, user: me, profile, email: myEmail } = useAuth();
 
   const [rows, setRows] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -126,6 +126,24 @@ export default function Users() {
           <RefreshCw size={15} /> Recargar
         </button>
       </div>
+
+      {/* La app puede considerarte Admin por la lista de respaldo aunque tu fila
+          en `profiles` no lo sea; en ese caso los RPC te van a rechazar. */}
+      {profile?.role !== 'Admin' && (
+        <div className="flex items-start gap-2 bg-amber-500/10 border border-amber-500/30 rounded-lg px-4 py-2.5 text-sm text-amber-300">
+          <AlertCircle size={15} className="shrink-0 mt-0.5" />
+          <span>
+            La app te reconoce como Admin por la lista de respaldo, pero en la tabla
+            <code className="mx-1 text-amber-200">profiles</code> tu rol es
+            <b className="mx-1">{profile?.role ?? 'inexistente'}</b>.
+            Crear o eliminar usuarios <b>fallará</b> hasta que tu fila diga Admin/Activo.
+            Corre en el SQL Editor:
+            <code className="block mt-1 text-xs text-amber-200">
+              insert into profiles (id, email, role, status) select id, email, 'Admin', 'Activo' from auth.users where email = '{myEmail ?? 'tu@correo.com'}' on conflict (id) do update set role='Admin', status='Activo';
+            </code>
+          </span>
+        </div>
+      )}
 
       {error && (
         <div className="flex items-start gap-2 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-2.5 text-sm text-red-400">
