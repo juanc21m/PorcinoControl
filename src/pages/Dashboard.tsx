@@ -38,7 +38,7 @@ const severityStyle: Record<AlertSeverity, { color: string; Icon: typeof AlertTr
 };
 
 // Columns shown in the horizontal alert board
-const ALERT_COLUMNS: AlertType[] = ['Reemplazo', 'Gestación', 'Maternidad', 'Destete', 'Ceba', 'Inventario'];
+const ALERT_COLUMNS: AlertType[] = ['Gestación', 'Maternidad', 'Destete', 'Ceba', 'Inventario'];
 
 type NatalityMode = 'Día' | 'Semana' | 'Mes';
 
@@ -178,7 +178,7 @@ export default function Dashboard() {
       {/* 1. Inventario de animales por etapa */}
       <div>
         <h3 className="text-white font-semibold mb-3">Inventario de Animales</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {ETAPAS.map(etapa => (
             <div key={etapa} className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5 flex flex-col items-center justify-center text-center">
               <span className="font-bold leading-none text-4xl sm:text-5xl lg:text-6xl" style={{ color: '#2E9437' }}>
@@ -265,7 +265,7 @@ export default function Dashboard() {
       {/* 5. Alertas por columnas */}
       <div>
         <h3 className="text-white font-semibold mb-3">Alertas Operativas</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
           {ALERT_COLUMNS.map(area => {
             const items = alertsByArea[area];
             return (

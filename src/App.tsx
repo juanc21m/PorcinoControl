@@ -6,7 +6,7 @@ import ProtectedLayout from './components/ProtectedLayout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Traceability from './pages/Traceability';
-import Etapas from './pages/Etapas';
+import Ubicacion from './pages/Ubicacion';
 import Inventory from './pages/Inventory';
 import Supplies from './pages/Supplies';
 import Finances from './pages/Finances';
@@ -28,7 +28,7 @@ export default function App() {
           <Route element={<ProtectedLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/traceability" element={<Traceability />} />
-            <Route path="/etapas" element={<Etapas />} />
+            <Route path="/ubicacion" element={<Ubicacion />} />
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/supplies" element={<Supplies />} />
             <Route path="/finances" element={<Finances />} />

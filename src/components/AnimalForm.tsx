@@ -50,6 +50,7 @@ export default function AnimalForm({ onClose }: Props) {
       birthDate: form.birthDate,
       weight: parseFloat(form.weight),
       etapaActual: 'Ceba',                       // ingreso externo entra a Ceba
+      roomNumber: 1,                             // Ceba tiene una sola sala
       feedType: ZONE_DEFAULT_FEED['Ceba'],       // Engorde
       dailyConsumption: 6,
       status: 'Activo',

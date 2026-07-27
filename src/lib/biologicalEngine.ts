@@ -26,8 +26,6 @@ export const BIO = {
   MAX_FARROWINGS: 8,
   GESTATION_CAPACITY: 150,
   MATERNITY_CAPACITY: 23,
-  REPLACEMENT_QUOTA: 5,
-  REPLACEMENT_MIN_AGE: 30,
   CEBA_EXIT_DAY: 150,
   CEBA_EXIT_WEIGHT: 230,
   DAY70_TARGET_WEIGHT: 65,
@@ -68,7 +66,6 @@ export function evaluateBiologicalRules(animals: Animal[], currentDate: string):
   const day0LowWeight: { tag: string; weight: number }[] = [];     // peso bajo al nacer
   const day70Cohort: { tag: string; weight: number }[] = [];       // chequeo target día 70
   const medicalBuckets: Record<number, string[]> = {};             // agenda médica
-  const replacementCandidates: Animal[] = [];                      // reemplazos sugeridos
   const salesTags: string[] = [];                                  // proyección de venta
 
   for (const a of active) {
@@ -114,11 +111,6 @@ export function evaluateBiologicalRules(animals: Animal[], currentDate: string):
     // ---- AREA 5: Ceba — proyección de venta (próximos 14 días a los 150) ----
     if (a.role === 'Ceba' && age >= BIO.CEBA_EXIT_DAY - BIO.SALES_PROJECTION_WINDOW && age <= BIO.CEBA_EXIT_DAY) {
       salesTags.push(a.tag);
-    }
-
-    // ---- AREA 1: Reemplazo (hembras Ceba > 30 días) ----
-    if (a.gender === 'Hembra' && a.role === 'Ceba' && age > BIO.REPLACEMENT_MIN_AGE) {
-      replacementCandidates.push(a);
     }
 
     if (a.gender !== 'Hembra') continue;
@@ -238,21 +230,6 @@ export function evaluateBiologicalRules(animals: Animal[], currentDate: string):
     }
   }
 
-  // ---- AREA 1: sugerencia de reemplazos ----
-  const sortedReplacements = [...replacementCandidates].sort((a, b) => b.weight - a.weight);
-  const suggested = sortedReplacements.slice(0, BIO.REPLACEMENT_QUOTA);
-  if (suggested.length < BIO.REPLACEMENT_QUOTA) {
-    alerts.push({
-      id: 'replacement',
-      type: 'Reemplazo',
-      severity: 'info',
-      title: 'Reemplazo Sugerido',
-      message: suggested.length
-        ? `Reemplazo Sugerido: [${suggested.map(a => a.tag).join(', ')}] (${suggested.length}/${BIO.REPLACEMENT_QUOTA})`
-        : `Cuota de reemplazo incompleta: ${suggested.length}/${BIO.REPLACEMENT_QUOTA} — sin candidatas disponibles`,
-    });
-  }
-
   // ---- Agenda médica diaria ----
   const medicalAgenda: MedicalTask[] = MEDICAL_PROTOCOL
     .filter(p => medicalBuckets[p.day]?.length)
@@ -268,7 +245,6 @@ export function evaluateBiologicalRules(animals: Animal[], currentDate: string):
   const countEtapa = (etapa: Animal['etapaActual']) => active.filter(a => a.etapaActual === etapa).length;
 
   const kpis: KPIUpdate[] = [
-    { metrica: 'reemplazo',  valor: suggested.length,        total: BIO.REPLACEMENT_QUOTA },
     { metrica: 'gestacion',  valor: countEtapa('Gestación'), total: BIO.GESTATION_CAPACITY },
     { metrica: 'maternidad', valor: countEtapa('Maternidad'), total: BIO.MATERNITY_CAPACITY },
     { metrica: 'destete',    valor: countEtapa('Destete') },

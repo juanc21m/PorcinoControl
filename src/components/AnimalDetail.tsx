@@ -8,7 +8,7 @@ import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import type { Animal, ServiceType } from '../types';
-import { LIFETIME_FARROWING_LIMIT, SERVICE_TYPES } from '../types';
+import { LIFETIME_FARROWING_LIMIT, SERVICE_TYPES, ZONES } from '../types';
 import { safeParseISO } from '../lib/date';
 import { useAppStore } from '../store/appStore';
 
@@ -253,6 +253,7 @@ export default function AnimalDetail({ animal: initial, onClose }: Props) {
   const initialWeight = live.weights.length ? live.weights[0].weight : live.weight;
   const gain = +(live.weight - initialWeight).toFixed(1);
   const farrowings = live.totalFarrowings ?? 0;
+  const litterTotal = (live.litterMales ?? 0) + (live.litterFemales ?? 0);
   const overLimit = farrowings >= LIFETIME_FARROWING_LIMIT;
   const cumConsumption = Math.round(live.dailyConsumption * ageDays);
 
@@ -322,7 +323,15 @@ export default function AnimalDetail({ animal: initial, onClose }: Props) {
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
               <h3 className="text-white font-semibold mb-3 flex items-center gap-2"><MapPin size={16} className="text-brand-400" /> Ubicación Actual</h3>
               <p className="text-3xl font-bold text-white">{live.etapaActual}</p>
-              <p className="text-gray-500 text-sm mt-1">Zona productiva actual</p>
+              <p className="text-gray-500 text-sm mt-1">
+                {live.roomNumber ? ZONES[live.etapaActual].roomLabel(live.roomNumber) : 'Sala sin asignar'}
+              </p>
+              {live.etapaActual === 'Maternidad' && (litterTotal > 0) && (
+                <p className="text-gray-300 text-sm mt-2">
+                  Camada actual: <span className="text-white font-semibold">{litterTotal}</span> lechones
+                  <span className="text-gray-500"> ({live.litterMales ?? 0} machos, {live.litterFemales ?? 0} hembras)</span>
+                </p>
+              )}
             </div>
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
               <h3 className="text-white font-semibold mb-3 flex items-center gap-2"><Droplet size={16} className="text-brand-400" /> Consumo</h3>

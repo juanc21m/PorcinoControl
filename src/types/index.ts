@@ -30,34 +30,50 @@ export const LB_PER_SACO: Record<FeedType, number> = {
 };
 
 /**
- * Las 5 etapas productivas del negocio. Sustituyen por completo al antiguo
- * mapeo de ubicaciones físicas (Galeras/Cuartos). Son fijas e inmutables.
+ * Las 4 zonas físicas de la granja. Cada zona se subdivide en cuartos/salas.
+ * Son fijas e inmutables.
  */
-export type EtapaProductiva = 'Reemplazo' | 'Gestación' | 'Maternidad' | 'Destete' | 'Ceba';
+export type EtapaProductiva = 'Gestación' | 'Maternidad' | 'Destete' | 'Ceba';
 
 export const ETAPAS: readonly EtapaProductiva[] = [
-  'Reemplazo',
   'Gestación',
   'Maternidad',
   'Destete',
   'Ceba',
 ] as const;
 
+/** Configuración física de una zona: cuántas salas tiene y cuánto cabe en cada una. */
+export interface ZoneConfig {
+  /** Cantidad de cuartos/salas de la zona. */
+  rooms: number;
+  /** Capacidad máxima de animales por sala. */
+  capacityPerRoom: number;
+  /** Etiqueta de cada sala (1-indexada). */
+  roomLabel: (n: number) => string;
+}
+
 /**
- * Capacidad máxima de animales por zona. Valores iniciales sensatos; ajústalos
- * a tu granja (futura pantalla de configuración los hará editables).
+ * Estructura real de la granja:
+ *  - Gestación:  1 sala,   200 cerdas
+ *  - Maternidad: 23 salas, 1 cerda por sala (los lechones NO ocupan sala:
+ *                van como conteo de la camada de esa cerda)
+ *  - Destete:    1 sala,   300 cerdos
+ *  - Ceba:       1 sala,   500 cerdos
  */
-export const ETAPA_CAPACITY: Record<EtapaProductiva, number> = {
-  Reemplazo: 30,
-  'Gestación': 150,
-  Maternidad: 23,
-  Destete: 200,
-  Ceba: 500,
+export const ZONES: Record<EtapaProductiva, ZoneConfig> = {
+  'Gestación': { rooms: 1,  capacityPerRoom: 200, roomLabel: () => 'Sala Principal' },
+  'Maternidad': { rooms: 23, capacityPerRoom: 1,  roomLabel: (n) => `Sala ${n}` },
+  'Destete':   { rooms: 1,  capacityPerRoom: 300, roomLabel: () => 'Sala Principal' },
+  'Ceba':      { rooms: 1,  capacityPerRoom: 500, roomLabel: () => 'Sala Principal' },
 };
 
-/** Alimento por defecto que consume cada zona (etapa productiva). */
+/** Capacidad total de la zona (salas × capacidad por sala). */
+export const ETAPA_CAPACITY: Record<EtapaProductiva, number> = Object.fromEntries(
+  ETAPAS.map(z => [z, ZONES[z].rooms * ZONES[z].capacityPerRoom]),
+) as Record<EtapaProductiva, number>;
+
+/** Alimento por defecto que consume cada zona. */
 export const ZONE_DEFAULT_FEED: Record<EtapaProductiva, FeedType> = {
-  Reemplazo: 'Crecimiento',
   'Gestación': 'Gestación',
   Maternidad: 'Lactancia',
   Destete: 'Fase 1',
@@ -69,7 +85,6 @@ export const ZONE_DEFAULT_FEED: Record<EtapaProductiva, FeedType> = {
  * Fase 1/2/3; el resto de zonas tiene un único alimento válido.
  */
 export const ZONE_ALLOWED_FEEDS: Record<EtapaProductiva, FeedType[]> = {
-  Reemplazo: ['Crecimiento'],
   'Gestación': ['Gestación'],
   Maternidad: ['Lactancia'],
   Destete: ['Fase 1', 'Fase 2', 'Fase 3'],
@@ -86,6 +101,15 @@ export interface Animal {
   birthTime?: string;       // hora exacta del nacimiento (HH:mm), opcional
   weight: number;
   etapaActual: EtapaProductiva;
+  /** Sala/cuarto que ocupa dentro de su zona (1-indexada). */
+  roomNumber?: number;
+  /**
+   * Camada del parto actual (solo cerdas en Maternidad). Los lechones NO son
+   * animales independientes mientras están con la madre: se llevan como conteo
+   * asociado a la cerda y su sala. Al destetar se convierten en animales con ID.
+   */
+  litterMales?: number;
+  litterFemales?: number;
   feedType: FeedType;
   dailyConsumption: number;
   status: AnimalStatus;
@@ -224,7 +248,7 @@ export interface SaleInvoice {
 export type AlertSeverity = 'info' | 'warning' | 'critical';
 
 /** Las áreas operativas que agrupan alertas en el Dashboard. */
-export type AlertType = 'Gestación' | 'Maternidad' | 'Destete' | 'Inventario' | 'Reemplazo' | 'Ceba';
+export type AlertType = 'Gestación' | 'Maternidad' | 'Destete' | 'Ceba' | 'Inventario';
 
 export interface Alert {
   id: string;
@@ -240,7 +264,7 @@ export interface Alert {
 
 /** Actualización de una métrica/KPI del motor biológico. */
 export interface KPIUpdate {
-  metrica: 'reemplazo' | 'gestacion' | 'maternidad' | 'destete' | 'ceba';
+  metrica: 'gestacion' | 'maternidad' | 'destete' | 'ceba';
   valor: number;
   total?: number;
 }

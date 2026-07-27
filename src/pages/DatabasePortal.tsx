@@ -16,7 +16,7 @@ CREATE TABLE animals (
   birth_date    DATE        NOT NULL,
   weight        DECIMAL(7,2) NOT NULL,
   etapa_actual  VARCHAR(12) NOT NULL DEFAULT 'Ceba'
-                CHECK (etapa_actual IN ('Reemplazo','Gestación','Maternidad','Destete','Ceba')),
+                CHECK (etapa_actual IN ('Gestación','Maternidad','Destete','Ceba')),
   feed_type     VARCHAR(12) NOT NULL CHECK (feed_type IN ('Crecimiento','Engorde','Lactancia')),
   daily_consumption DECIMAL(5,2) NOT NULL,
   status        VARCHAR(18) NOT NULL DEFAULT 'Activo'
