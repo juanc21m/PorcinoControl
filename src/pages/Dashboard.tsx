@@ -7,45 +7,25 @@ import { es } from 'date-fns/locale';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts';
-import { AlertTriangle, AlertCircle, Info, Baby, PiggyBank, CalendarClock } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import { AlertTriangle, AlertCircle, Info, Baby, Bell, CheckCircle2, X } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
-import { ETAPAS, FEED_TYPES, LB_PER_SACO } from '../types';
-import type { EtapaProductiva, FeedType, AlertType, AlertSeverity } from '../types';
+import { ETAPAS, ETAPA_CAPACITY, FEED_TYPES } from '../types';
+import type { EtapaProductiva, AlertSeverity } from '../types';
 
 const LOW_FEED_SACOS = 50;
 
-/** Tarjeta de resumen con estilo glassmorphism. */
-function StatCard({ Icon, iconClass, label, value }: { Icon: LucideIcon; iconClass: string; label: string; value: string | number }) {
-  return (
-    <div className="rounded-xl border border-white/60 bg-white/80 backdrop-blur-sm shadow-lg p-4 sm:p-5 flex items-center gap-4">
-      <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shrink-0 ${iconClass}`}>
-        <Icon size={24} />
-      </div>
-      <div className="min-w-0">
-        <p className="text-gray-500 text-[11px] sm:text-xs font-medium uppercase tracking-wide truncate">{label}</p>
-        <p className="text-2xl sm:text-3xl font-bold text-primary-900 leading-tight">{value}</p>
-      </div>
-    </div>
-  );
-}
-
 // ---- Severity styling ----
-const severityStyle: Record<AlertSeverity, { color: string; Icon: typeof AlertTriangle }> = {
-  critical: { color: '#ef4444', Icon: AlertTriangle },
-  warning:  { color: '#ff9800', Icon: AlertCircle },
-  info:     { color: '#9ca3af', Icon: Info },
+const severityStyle: Record<AlertSeverity, { tone: string; Icon: typeof AlertTriangle }> = {
+  critical: { tone: 'text-red-400',   Icon: AlertTriangle },
+  warning:  { tone: 'text-amber-400', Icon: AlertCircle },
+  info:     { tone: 'text-gray-400',  Icon: Info },
 };
-
-// Columns shown in the horizontal alert board
-const ALERT_COLUMNS: AlertType[] = ['Gestación', 'Maternidad', 'Destete', 'Ceba', 'Inventario'];
 
 type NatalityMode = 'Día' | 'Semana' | 'Mes';
 
 export default function Dashboard() {
   const animals = useAppStore(s => s.animals);
   const inventory = useAppStore(s => s.inventory);
-  const inventoryHistory = useAppStore(s => s.inventoryHistory);
   const currentDate = useAppStore(s => s.currentDate);
   const alerts = useAppStore(s => s.alerts);
   const runBiologicalEngine = useAppStore(s => s.runBiologicalEngine);
@@ -65,20 +45,6 @@ export default function Dashboard() {
     }
     return counts;
   }, [animals]);
-
-  // -------------------------------------------------------------------------
-  // 3. Consumo de alimento del día por tipo
-  // -------------------------------------------------------------------------
-  const feedTypes = FEED_TYPES;
-  const consumedToday = useMemo(() => {
-    const map = Object.fromEntries(feedTypes.map(t => [t, 0])) as Record<FeedType, number>;
-    for (const tx of inventoryHistory) {
-      if (tx.operation === 'Consumo' && tx.date === currentDate) {
-        map[tx.feedType] += tx.lb;
-      }
-    }
-    return map;
-  }, [inventoryHistory, currentDate]);
 
   // -------------------------------------------------------------------------
   // 4. Natalidad por período (dinámico)
@@ -129,98 +95,79 @@ export default function Dashboard() {
     });
   }, [animals, natMode, natDate]);
 
-  // -------------------------------------------------------------------------
-  // 5. Alertas agrupadas por columna
-  // -------------------------------------------------------------------------
-  const alertsByArea = useMemo(() => {
-    const grouped = Object.fromEntries(ALERT_COLUMNS.map(a => [a, [] as typeof alerts])) as Record<AlertType, typeof alerts>;
-    for (const al of alerts) {
-      if (ALERT_COLUMNS.includes(al.type)) grouped[al.type].push(al);
-    }
-    return grouped;
-  }, [alerts]);
-
-  // -------------------------------------------------------------------------
-  // Tarjetas de resumen (datos críticos rápidos)
-  // -------------------------------------------------------------------------
-  const summary = useMemo(() => {
-    const ym = currentDate.slice(0, 7); // 'YYYY-MM'
-    return {
-      cerdasActivas: animals.filter(a => a.gender === 'Hembra' && a.status === 'Activo').length,
-      partosMes: animals.filter(a => (a.lastFarrowingDate ?? '').slice(0, 7) === ym).length,
-      verracos: animals.filter(a => a.gender === 'Macho' && a.status === 'Activo').length,
-      lowFeed: Object.values(inventory).filter(v => v.sacos <= LOW_FEED_SACOS).length,
-    };
-  }, [animals, inventory, currentDate]);
-
-  const fmtSacos = (lb: number, type: FeedType) => {
-    const sacos = lb / LB_PER_SACO[type];
-    const rounded = Math.round(sacos * 10) / 10;
-    const label = Number.isInteger(rounded) ? rounded.toString() : rounded.toFixed(1);
-    return `${label} ${rounded === 1 ? 'saco' : 'sacos'} (${lb.toLocaleString()} lb)`;
-  };
+  const criticalCount = alerts.filter(a => a.severity === 'critical').length;
+  const totalActive = animals.filter(a => a.status === 'Activo').length;
+  const totalSacos = Object.values(inventory).reduce((acc, v) => acc + v.sacos, 0);
+  const dismissAlert = useAppStore(s => s.dismissAlert);
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-gray-50">Dashboard</h1>
         <p className="text-gray-400 text-sm mt-0.5">Resumen operativo en tiempo real · {currentDate}</p>
       </div>
 
-      {/* Tarjetas de resumen (glassmorphism) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <StatCard Icon={PiggyBank} iconClass="bg-brand-100 text-brand-700" label="Cerdas Activas" value={summary.cerdasActivas} />
-        <StatCard Icon={CalendarClock} iconClass="bg-primary-100 text-primary-800" label="Partos este Mes" value={summary.partosMes} />
-        <StatCard Icon={PiggyBank} iconClass="bg-sky-100 text-sky-700" label="Verracos Totales" value={summary.verracos} />
-        <StatCard Icon={AlertTriangle} iconClass="bg-red-100 text-red-600" label="Alimento Bajo Stock" value={`${summary.lowFeed} ${summary.lowFeed === 1 ? 'Item' : 'Items'}`} />
-      </div>
-
-      {/* 1. Inventario de animales por etapa */}
-      <div>
-        <h3 className="text-white font-semibold mb-3">Inventario de Animales</h3>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {ETAPAS.map(etapa => (
-            <div key={etapa} className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5 flex flex-col items-center justify-center text-center">
-              <span className="font-bold leading-none text-4xl sm:text-5xl lg:text-6xl" style={{ color: '#2E9437' }}>
-                {etapaCounts[etapa]}
-              </span>
-              <span className="text-gray-300 text-xs sm:text-sm mt-2">{etapa}</span>
-            </div>
-          ))}
+      {/* 1. Inventario de animales por zona */}
+      <section>
+        <div className="flex items-baseline justify-between mb-3">
+          <h3 className="text-gray-50 font-semibold tracking-tight">Inventario de Animales</h3>
+          <span className="text-gray-500 text-xs tabular-nums">{totalActive} activos</span>
         </div>
-      </div>
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+          {ETAPAS.map(etapa => {
+            const count = etapaCounts[etapa];
+            const cap = ETAPA_CAPACITY[etapa];
+            const pct = cap > 0 ? Math.min(100, (count / cap) * 100) : 0;
+            return (
+              <div
+                key={etapa}
+                className="bg-gray-900 border border-gray-800 rounded-2xl p-5 shadow-sm hover:border-brand-600/40 hover:shadow-md transition-all"
+              >
+                <p className="text-gray-400 text-[11px] font-medium uppercase tracking-wider truncate">{etapa}</p>
+                <p className="text-4xl font-bold text-gray-50 mt-2 leading-none tabular-nums">{count}</p>
+                <div className="mt-4 h-1 w-full rounded-full bg-gray-800 overflow-hidden">
+                  <div className="h-full rounded-full bg-brand-500 transition-all" style={{ width: `${pct}%` }} />
+                </div>
+                <p className="text-gray-500 text-[11px] mt-1.5 tabular-nums">de {cap} de capacidad</p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
       {/* 2. Inventario de alimentos */}
-      <div>
-        <h3 className="text-white font-semibold mb-3">Inventario de Alimentos</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-          {(Object.entries(inventory) as [string, { sacos: number; lb: number }][]).map(([type, data]) => (
-            <div key={type} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-              <p className="text-gray-400 text-sm">{type}</p>
-              <p className="text-2xl font-bold text-white mt-1">{data.sacos} sacos</p>
-              <p className="text-gray-500 text-xs mt-0.5">{data.lb.toLocaleString()} lb</p>
-            </div>
-          ))}
+      <section>
+        <div className="flex items-baseline justify-between mb-3">
+          <h3 className="text-gray-50 font-semibold tracking-tight">Inventario de Alimentos</h3>
+          <span className="text-gray-500 text-xs tabular-nums">{totalSacos.toLocaleString()} sacos en total</span>
         </div>
-      </div>
-
-      {/* 3. Consumo de alimento del día por tipo */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-        <h3 className="text-white font-semibold mb-4">Alimento Consumido Hoy</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-          {feedTypes.map(type => (
-            <div key={type} className="bg-gray-800/40 border border-gray-800 rounded-lg p-4">
-              <p className="text-gray-400 text-sm">{type}</p>
-              <p className="text-base sm:text-lg font-bold text-white mt-1">{fmtSacos(consumedToday[type], type)}</p>
-            </div>
-          ))}
+          {FEED_TYPES.map(type => {
+            const data = inventory[type];
+            const low = data.sacos <= LOW_FEED_SACOS;
+            return (
+              <div
+                key={type}
+                className="bg-gray-900 border border-gray-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-gray-400 text-[11px] font-medium uppercase tracking-wider">{type}</p>
+                  {low && <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0 mt-1" title="Stock bajo" />}
+                </div>
+                <p className={`text-3xl font-bold mt-2 leading-none tabular-nums ${low ? 'text-red-400' : 'text-gray-50'}`}>
+                  {data.sacos}
+                </p>
+                <p className="text-gray-500 text-[11px] mt-1.5 tabular-nums">sacos · {data.lb.toLocaleString()} lb</p>
+              </div>
+            );
+          })}
         </div>
-      </div>
+      </section>
 
       {/* 4. Natalidad por período */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <h3 className="text-white font-semibold flex items-center gap-2">
+          <h3 className="text-gray-50 font-semibold flex items-center gap-2">
             <Baby size={16} className="text-brand-400" />
             Natalidad por Período
           </h3>
@@ -232,7 +179,7 @@ export default function Dashboard() {
                   <button
                     key={m}
                     onClick={() => setNatMode(m)}
-                    className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${natMode === m ? 'bg-brand-800 text-white shadow-glow' : 'text-gray-400 hover:text-white'}`}
+                    className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${natMode === m ? 'bg-brand-800 text-gray-50 shadow-glow' : 'text-gray-400 hover:text-gray-50'}`}
                   >
                     {m}
                   </button>
@@ -262,45 +209,58 @@ export default function Dashboard() {
         </ResponsiveContainer>
       </div>
 
-      {/* 5. Alertas por columnas */}
-      <div>
-        <h3 className="text-white font-semibold mb-3">Alertas Operativas</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
-          {ALERT_COLUMNS.map(area => {
-            const items = alertsByArea[area];
-            return (
-              <div key={area} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-white font-medium text-sm">{area}</h4>
-                  <span className="text-xs text-gray-500 bg-gray-800 rounded-full px-2 py-0.5">{items.length}</span>
-                </div>
-                <div className="space-y-2">
-                  {items.length === 0 ? (
-                    <p className="text-gray-600 text-xs">Sin alertas</p>
-                  ) : (
-                    items.map(al => {
-                      const { color, Icon } = severityStyle[al.severity];
-                      return (
-                        <div
-                          key={al.id}
-                          className="rounded-lg px-2.5 py-2 text-xs flex items-start gap-2 border"
-                          style={{ borderColor: `${color}40`, background: `${color}14`, color }}
-                        >
-                          <Icon size={13} className="mt-0.5 shrink-0" />
-                          <span className="leading-snug">
-                            <span className="font-semibold block">{al.title}</span>
-                            {al.message}
-                          </span>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              </div>
-            );
-          })}
+      {/* 5. Bandeja de alertas (panel compacto) */}
+      <section className="bg-gray-900 border border-gray-800 rounded-2xl shadow-sm overflow-hidden">
+        <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-gray-800">
+          <Bell size={16} className="text-brand-400" />
+          <h3 className="text-gray-50 font-semibold tracking-tight">Alertas Operativas</h3>
+          {alerts.length > 0 && (
+            <span className="text-[11px] font-semibold bg-brand-500/15 text-brand-400 rounded-full px-2 py-0.5 tabular-nums">
+              {alerts.length}
+            </span>
+          )}
+          {criticalCount > 0 && (
+            <span className="text-[11px] font-semibold bg-red-500/15 text-red-400 rounded-full px-2 py-0.5 tabular-nums">
+              {criticalCount} crítica{criticalCount === 1 ? '' : 's'}
+            </span>
+          )}
         </div>
-      </div>
+
+        {alerts.length === 0 ? (
+          <div className="px-5 py-10 flex flex-col items-center text-center">
+            <CheckCircle2 size={26} className="text-brand-500 mb-2" />
+            <p className="text-gray-100 text-sm font-medium">Todo en orden</p>
+            <p className="text-gray-500 text-xs mt-0.5">No hay alertas operativas pendientes.</p>
+          </div>
+        ) : (
+          <ul className="divide-y divide-gray-800 max-h-[26rem] overflow-y-auto">
+            {alerts.map(al => {
+              const { tone, Icon } = severityStyle[al.severity];
+              return (
+                <li key={al.id} className="flex items-start gap-3 px-5 py-3 hover:bg-gray-800/40 transition-colors">
+                  <Icon size={15} className={`${tone} mt-0.5 shrink-0`} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-gray-100 text-sm font-medium">{al.title}</p>
+                      <span className="text-[10px] uppercase tracking-wider text-gray-500 bg-gray-800 rounded px-1.5 py-0.5">
+                        {al.type}
+                      </span>
+                    </div>
+                    <p className="text-gray-400 text-xs mt-0.5 leading-snug">{al.message}</p>
+                  </div>
+                  <button
+                    onClick={() => dismissAlert(al.id)}
+                    aria-label="Descartar alerta"
+                    className="text-gray-500 hover:text-gray-100 p-1 shrink-0 transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

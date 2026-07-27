@@ -142,7 +142,7 @@ export default function DatabasePortal() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-gray-50 flex items-center gap-2">
           <Database size={22} className="text-brand-400" /> DB Portal
         </h1>
         <p className="text-gray-400 text-sm mt-0.5">Consola técnica — esquema PostgreSQL y sandbox REST API</p>
@@ -157,7 +157,7 @@ export default function DatabasePortal() {
           <button
             key={key}
             onClick={() => setTab(key)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === key ? 'bg-brand-800 text-white shadow-glow' : 'text-gray-400 hover:text-white'}`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === key ? 'bg-brand-800 text-gray-50 shadow-glow' : 'text-gray-400 hover:text-gray-50'}`}
           >
             <Icon size={15} /> {label}
           </button>
@@ -167,7 +167,7 @@ export default function DatabasePortal() {
       {/* Schema */}
       {tab === 'schema' && (
         <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-          <div className="bg-primary-800/40 px-4 py-2 flex items-center gap-2 border-b border-gray-800">
+          <div className="bg-gray-800/60 px-4 py-2 flex items-center gap-2 border-b border-gray-800">
             <div className="flex gap-1.5">
               <span className="w-3 h-3 rounded-full bg-red-500" />
               <span className="w-3 h-3 rounded-full bg-yellow-500" />
@@ -185,7 +185,7 @@ export default function DatabasePortal() {
       {tab === 'sandbox' && (
         <div className="space-y-4">
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-            <h3 className="text-white font-semibold mb-4">Selector de Endpoint</h3>
+            <h3 className="text-gray-50 font-semibold mb-4">Selector de Endpoint</h3>
             <div className="flex flex-wrap gap-3 mb-4">
               {(['GET /animals', 'GET /animals/:tag', 'POST /animals/farrowing', 'GET /invoices', 'GET /inventory'] as EndpointKey[]).map(ep => (
                 <button
@@ -220,7 +220,7 @@ export default function DatabasePortal() {
 
           {response && (
             <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-              <div className="bg-primary-800/40 px-4 py-2 flex items-center justify-between border-b border-gray-800">
+              <div className="bg-gray-800/60 px-4 py-2 flex items-center justify-between border-b border-gray-800">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-green-500" />
                   <span className="text-gray-400 text-xs font-mono">200 OK</span>

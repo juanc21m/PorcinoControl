@@ -99,7 +99,7 @@ export default function Reports() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-gray-50 flex items-center gap-2">
           <FileSpreadsheet size={22} className="text-brand-400" /> Reportes e Importación
         </h1>
         <p className="text-gray-400 text-sm mt-0.5">Exporta toda tu data a CSV (Excel) y carga información de forma masiva</p>
@@ -107,7 +107,7 @@ export default function Reports() {
 
       {/* Exportación */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-        <h3 className="text-white font-semibold mb-4 flex items-center gap-2"><Download size={16} className="text-brand-400" /> Exportar (CSV / Excel)</h3>
+        <h3 className="text-gray-50 font-semibold mb-4 flex items-center gap-2"><Download size={16} className="text-brand-400" /> Exportar (CSV / Excel)</h3>
         <div className="flex flex-wrap items-end gap-3 mb-4">
           <div>
             <label className="label">Desde</label>
@@ -131,7 +131,7 @@ export default function Reports() {
       {/* Importación (solo admin) */}
       {isAdmin ? (
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-          <h3 className="text-white font-semibold mb-1 flex items-center gap-2"><Upload size={16} className="text-brand-400" /> Importación Masiva</h3>
+          <h3 className="text-gray-50 font-semibold mb-1 flex items-center gap-2"><Upload size={16} className="text-brand-400" /> Importación Masiva</h3>
           <p className="text-gray-500 text-sm mb-4">
             Descarga la plantilla, llénala en Excel y súbela. Las columnas son <b>idénticas</b> a las de exportación:
             puedes exportar, editar y volver a subir. Los animales se actualizan por <code className="text-gray-300">id</code> (déjalo vacío para crear nuevos).
@@ -140,7 +140,7 @@ export default function Reports() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Animales */}
             <div className="bg-gray-800/40 border border-gray-800 rounded-lg p-4 space-y-3">
-              <h4 className="text-white font-medium">Animales</h4>
+              <h4 className="text-gray-50 font-medium">Animales</h4>
               <button onClick={templateAnimals} className="btn-secondary w-full flex items-center justify-center gap-2"><FileDown size={15} /> Descargar Plantilla CSV</button>
               <button onClick={() => animalsRef.current?.click()} className="btn-primary w-full flex items-center justify-center gap-2"><Upload size={15} /> Subir Archivo</button>
               <input ref={animalsRef} type="file" accept=".csv,text/csv" className="hidden"
@@ -148,7 +148,7 @@ export default function Reports() {
             </div>
             {/* Inventario */}
             <div className="bg-gray-800/40 border border-gray-800 rounded-lg p-4 space-y-3">
-              <h4 className="text-white font-medium">Inventario de Alimentos</h4>
+              <h4 className="text-gray-50 font-medium">Inventario de Alimentos</h4>
               <button onClick={templateInventory} className="btn-secondary w-full flex items-center justify-center gap-2"><FileDown size={15} /> Descargar Plantilla CSV</button>
               <button onClick={() => inventoryRef.current?.click()} className="btn-primary w-full flex items-center justify-center gap-2"><Upload size={15} /> Subir Archivo</button>
               <input ref={inventoryRef} type="file" accept=".csv,text/csv" className="hidden"
@@ -163,7 +163,7 @@ export default function Reports() {
                 {result.errors.length === 0
                   ? <CheckCircle2 size={16} className="text-green-400" />
                   : <AlertTriangle size={16} className="text-yellow-400" />}
-                <span className="text-white font-medium">{result.label}:</span>
+                <span className="text-gray-50 font-medium">{result.label}:</span>
                 <span className="text-gray-300">{result.ok} de {result.total} fila(s) importadas correctamente.</span>
               </p>
               {result.errors.length > 0 && (

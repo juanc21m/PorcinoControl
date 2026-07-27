@@ -2,7 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
+/**
+ * Tokens de tema. La escala `gray` se invierte en modo claro, de modo que
+ * `bg-gray-900` siempre significa "superficie de tarjeta" y `text-gray-50`
+ * siempre significa "texto principal", en ambos temas.
+ *   50  → texto principal      400 → texto secundario
+ *   600 → texto muy tenue      800 → bordes / inputs
+ *   900 → tarjeta              950 → fondo de página
+ */
 @layer base {
+  /* Modo oscuro (por defecto): escala gris estándar */
+  :root, .dark {
+    --c-gray-50:  249 250 251;
+    --c-gray-100: 243 244 246;
+    --c-gray-200: 229 231 235;
+    --c-gray-300: 209 213 219;
+    --c-gray-400: 156 163 175;
+    --c-gray-500: 107 114 128;
+    --c-gray-600: 107 114 128;
+    --c-gray-700: 55 65 81;
+    --c-gray-800: 31 41 55;
+    --c-gray-900: 17 24 39;
+    --c-gray-950: 3 7 18;
+  }
+
+  /* Modo claro: escala invertida (texto oscuro sobre superficies claras) */
+  .light {
+    --c-gray-50:  15 23 42;
+    --c-gray-100: 30 41 59;
+    --c-gray-200: 51 65 85;
+    --c-gray-300: 71 85 105;
+    --c-gray-400: 71 85 105;
+    --c-gray-500: 100 116 139;
+    --c-gray-600: 148 163 184;
+    --c-gray-700: 203 213 225;
+    --c-gray-800: 226 232 240;
+    --c-gray-900: 255 255 255;
+    --c-gray-950: 248 250 252;
+  }
+
   * { box-sizing: border-box; }
   body {
     @apply bg-gray-950 text-gray-100 antialiased;
@@ -12,7 +50,7 @@
 
 @layer components {
   .input {
-    @apply w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm
+    @apply w-full bg-gray-800 border border-gray-700 text-gray-50 rounded-lg px-3 py-2 text-sm
            focus:outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600 transition-colors;
   }
 
@@ -21,13 +59,18 @@
   }
 
   .btn-primary {
-    @apply bg-primary-800 hover:bg-primary-700 text-white font-medium px-4 py-2 rounded-lg text-sm
+    @apply bg-brand-600 hover:bg-brand-500 text-gray-50 font-medium px-4 py-2 rounded-lg text-sm
            transition-all shadow-sm;
   }
 
   .btn-secondary {
-    @apply bg-gray-800 hover:bg-gray-700 text-accent-300 font-medium px-4 py-2 rounded-lg text-sm
-           border border-accent-700/40 transition-colors;
+    @apply bg-gray-800 hover:bg-gray-700 text-gray-100 font-medium px-4 py-2 rounded-lg text-sm
+           border border-gray-700 transition-colors;
+  }
+
+  /* Tarjeta base: superficie + borde coherentes en ambos temas. */
+  .card {
+    @apply bg-gray-900 border border-gray-800 rounded-xl;
   }
 }
 

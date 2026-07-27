@@ -40,8 +40,8 @@ export default function ContactForm({ defaultType = 'Cliente', onClose }: Props)
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 w-full max-w-lg">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-white font-semibold text-lg">Nuevo Contacto</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
+          <h2 className="text-gray-50 font-semibold text-lg">Nuevo Contacto</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-50">
             <X size={20} />
           </button>
         </div>

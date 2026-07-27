@@ -109,14 +109,14 @@ export default function RegisterBirthForm({ onClose }: Props) {
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-3 sm:p-4">
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 sm:p-6 w-full max-w-lg max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-white font-semibold text-lg flex items-center gap-2"><Baby size={20} className="text-brand-400" /> Registrar Parto</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white"><X size={22} /></button>
+          <h2 className="text-gray-50 font-semibold text-lg flex items-center gap-2"><Baby size={20} className="text-brand-400" /> Registrar Parto</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-50"><X size={22} /></button>
         </div>
 
         {mothers.length === 0 ? (
           <div className="space-y-4">
             <p className="text-sm text-gray-300 bg-gray-800/40 border border-gray-800 rounded-lg px-4 py-3">
-              No hay hembras en <b className="text-white">Gestación</b> ni <b className="text-white">Maternidad</b> disponibles para parto.
+              No hay hembras en <b className="text-gray-50">Gestación</b> ni <b className="text-gray-50">Maternidad</b> disponibles para parto.
               Solo aparecen aquí las madres en esas zonas.
             </p>
             <div className="flex justify-end"><button onClick={onClose} className="btn-secondary">Cerrar</button></div>
@@ -170,7 +170,7 @@ export default function RegisterBirthForm({ onClose }: Props) {
 
             {/* Resumen + preview de IDs */}
             <div className="bg-brand-800/10 border border-brand-800/30 rounded-lg px-4 py-3 text-sm space-y-1">
-              <p className="text-gray-300">Se crearán <span className="text-white font-bold text-base">{total}</span> lechón(es) en <span className="text-white font-semibold">Maternidad</span>, en un solo registro.</p>
+              <p className="text-gray-300">Se crearán <span className="text-gray-50 font-bold text-base">{total}</span> lechón(es) en <span className="text-gray-50 font-semibold">Maternidad</span>, en un solo registro.</p>
               {preview.m && <p className="text-gray-400 text-xs">Machos: <span className="font-mono text-brand-300">{preview.m}</span></p>}
               {preview.h && <p className="text-gray-400 text-xs">Hembras: <span className="font-mono text-brand-300">{preview.h}</span></p>}
             </div>

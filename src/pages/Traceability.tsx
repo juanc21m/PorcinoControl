@@ -46,7 +46,7 @@ export default function Traceability() {
             <img src={LOGO_URL} alt={APP_NAME} className="h-8 w-auto object-contain" />
           </span>
           <div>
-            <h1 className="text-2xl font-bold text-white">Trazabilidad</h1>
+            <h1 className="text-2xl font-bold text-gray-50">Trazabilidad</h1>
             <p className="text-gray-400 text-sm mt-0.5">{APP_NAME} · Registro de vida y genealogía</p>
           </div>
         </div>
@@ -91,7 +91,7 @@ export default function Traceability() {
           { label: 'En Ceba', value: animals.filter(a => a.role === 'Ceba').length },
         ].map(stat => (
           <div key={stat.label} className="bg-gray-900 border border-gray-800 rounded-lg p-3 text-center">
-            <p className="text-2xl font-bold text-white">{stat.value}</p>
+            <p className="text-2xl font-bold text-gray-50">{stat.value}</p>
             <p className="text-gray-500 text-xs">{stat.label}</p>
           </div>
         ))}
@@ -101,7 +101,7 @@ export default function Traceability() {
       <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-primary-800/40">
+            <thead className="bg-gray-800/60">
               <tr className="text-gray-400">
                 <th className="text-left px-4 py-3">Tag</th>
                 <th className="text-left px-4 py-3">Género</th>
@@ -135,7 +135,7 @@ export default function Traceability() {
                       <span className="text-gray-600 text-xs">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-white font-medium">{animal.weight}</td>
+                  <td className="px-4 py-3 text-gray-50 font-medium">{animal.weight}</td>
                   <td className="px-4 py-3 text-gray-400">{animal.birthDate}</td>
                   <td className="px-4 py-3 text-gray-400 text-xs">{animal.feedType}</td>
                   <td className="px-4 py-3">

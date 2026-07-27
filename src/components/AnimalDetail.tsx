@@ -49,7 +49,7 @@ function FarrowingModal({ mother, onClose }: { mother: Animal; onClose: () => vo
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[60] p-4">
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <h3 className="text-white font-semibold mb-4 flex items-center gap-2"><Baby size={18} className="text-brand-400" /> Registrar Nacimiento (Camada)</h3>
+        <h3 className="text-gray-50 font-semibold mb-4 flex items-center gap-2"><Baby size={18} className="text-brand-400" /> Registrar Nacimiento (Camada)</h3>
         <form onSubmit={submit} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -131,7 +131,7 @@ function ServiceModal({ female, onClose }: { female: Animal; onClose: () => void
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[60] p-4">
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+        <h3 className="text-gray-50 font-semibold mb-4 flex items-center gap-2">
           <Syringe size={18} className="text-brand-400" /> Registrar Servicio · {female.tag}
         </h3>
         <form onSubmit={submit} className="space-y-4">
@@ -207,7 +207,7 @@ function Metric({ label, value, sub, accent }: { label: string; value: string | 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
       <p className="text-gray-500 text-xs">{label}</p>
-      <p className={`text-2xl font-bold mt-0.5 ${accent ?? 'text-white'}`}>{value}</p>
+      <p className={`text-2xl font-bold mt-0.5 ${accent ?? 'text-gray-50'}`}>{value}</p>
       {sub && <p className="text-gray-500 text-xs mt-0.5">{sub}</p>}
     </div>
   );
@@ -271,7 +271,7 @@ export default function AnimalDetail({ animal: initial, onClose }: Props) {
         <div className="sticky top-0 z-10 bg-gray-900/95 backdrop-blur border-b border-gray-800">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-3">
             <div className="min-w-0">
-              <h2 className="text-white font-bold text-xl tracking-tight flex items-center gap-2">
+              <h2 className="text-gray-50 font-bold text-xl tracking-tight flex items-center gap-2">
                 {live.tag}
                 <span className="text-gray-600 text-xs font-normal">(ID no editable)</span>
               </h2>
@@ -289,7 +289,7 @@ export default function AnimalDetail({ animal: initial, onClose }: Props) {
                   <button onClick={saveEdit} className="btn-primary flex items-center gap-1.5"><Save size={15} /> Guardar</button>
                 </>
               )}
-              <button onClick={onClose} className="text-gray-400 hover:text-white p-1"><X size={22} /></button>
+              <button onClick={onClose} className="text-gray-400 hover:text-gray-50 p-1"><X size={22} /></button>
             </div>
           </div>
         </div>
@@ -308,12 +308,12 @@ export default function AnimalDetail({ animal: initial, onClose }: Props) {
 
           {/* Métricas clave */}
           <div>
-            <h3 className="text-white font-semibold mb-3 flex items-center gap-2"><TrendingUp size={16} className="text-brand-400" /> Métricas Clave</h3>
+            <h3 className="text-gray-50 font-semibold mb-3 flex items-center gap-2"><TrendingUp size={16} className="text-brand-400" /> Métricas Clave</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
               <Metric label="Edad" value={`${ageDays} d`} sub={`Nac. ${live.birthDate}`} />
               <Metric label="Peso actual" value={`${live.weight} lb`} sub={`Inicial ${initialWeight} lb`} />
               <Metric label="Ganancia" value={`${gain >= 0 ? '+' : ''}${gain} lb`} accent={gain >= 0 ? 'text-green-400' : 'text-red-400'} />
-              <Metric label="Partos (lifetime)" value={farrowings} sub={`Límite ${LIFETIME_FARROWING_LIMIT}`} accent={overLimit ? 'text-red-400' : 'text-white'} />
+              <Metric label="Partos (lifetime)" value={farrowings} sub={`Límite ${LIFETIME_FARROWING_LIMIT}`} accent={overLimit ? 'text-red-400' : 'text-gray-50'} />
               <Metric label="Consumo acum. (est.)" value={`${cumConsumption} lb`} sub={`${live.dailyConsumption} lb/día`} />
             </div>
           </div>
@@ -321,29 +321,29 @@ export default function AnimalDetail({ animal: initial, onClose }: Props) {
           {/* Ubicación + Consumo actual */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-              <h3 className="text-white font-semibold mb-3 flex items-center gap-2"><MapPin size={16} className="text-brand-400" /> Ubicación Actual</h3>
-              <p className="text-3xl font-bold text-white">{live.etapaActual}</p>
+              <h3 className="text-gray-50 font-semibold mb-3 flex items-center gap-2"><MapPin size={16} className="text-brand-400" /> Ubicación Actual</h3>
+              <p className="text-3xl font-bold text-gray-50">{live.etapaActual}</p>
               <p className="text-gray-500 text-sm mt-1">
                 {live.roomNumber ? ZONES[live.etapaActual].roomLabel(live.roomNumber) : 'Sala sin asignar'}
               </p>
               {live.etapaActual === 'Maternidad' && (litterTotal > 0) && (
                 <p className="text-gray-300 text-sm mt-2">
-                  Camada actual: <span className="text-white font-semibold">{litterTotal}</span> lechones
+                  Camada actual: <span className="text-gray-50 font-semibold">{litterTotal}</span> lechones
                   <span className="text-gray-500"> ({live.litterMales ?? 0} machos, {live.litterFemales ?? 0} hembras)</span>
                 </p>
               )}
             </div>
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-              <h3 className="text-white font-semibold mb-3 flex items-center gap-2"><Droplet size={16} className="text-brand-400" /> Consumo</h3>
-              <p className="text-gray-300">Alimento: <span className="text-white font-medium">{live.feedType}</span></p>
-              <p className="text-gray-300">Ración diaria: <span className="text-white font-medium">{live.dailyConsumption} lb/día</span></p>
-              <p className="text-gray-300">Acumulado estimado: <span className="text-white font-medium">{cumConsumption} lb</span> <span className="text-gray-500 text-xs">(ración × edad)</span></p>
+              <h3 className="text-gray-50 font-semibold mb-3 flex items-center gap-2"><Droplet size={16} className="text-brand-400" /> Consumo</h3>
+              <p className="text-gray-300">Alimento: <span className="text-gray-50 font-medium">{live.feedType}</span></p>
+              <p className="text-gray-300">Ración diaria: <span className="text-gray-50 font-medium">{live.dailyConsumption} lb/día</span></p>
+              <p className="text-gray-300">Acumulado estimado: <span className="text-gray-50 font-medium">{cumConsumption} lb</span> <span className="text-gray-500 text-xs">(ración × edad)</span></p>
             </div>
           </div>
 
           {/* Datos generales (con edición) */}
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-            <h3 className="text-white font-semibold mb-4">Datos Generales</h3>
+            <h3 className="text-gray-50 font-semibold mb-4">Datos Generales</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
               <div>
                 <p className="text-gray-500 text-xs mb-1">ID del Cerdo</p>
@@ -351,36 +351,36 @@ export default function AnimalDetail({ animal: initial, onClose }: Props) {
               </div>
               <div>
                 <p className="text-gray-500 text-xs mb-1">Rol</p>
-                <p className="text-white font-medium pt-2">{live.role ?? 'N/A'}</p>
+                <p className="text-gray-50 font-medium pt-2">{live.role ?? 'N/A'}</p>
               </div>
               <div>
                 <p className="text-gray-500 text-xs mb-1">Género</p>
-                <p className="text-white font-medium pt-2">{live.gender}</p>
+                <p className="text-gray-50 font-medium pt-2">{live.gender}</p>
               </div>
               <div>
                 <p className="text-gray-500 text-xs mb-1">Raza</p>
                 {editing
                   ? <input className="input" value={draft.breed} onChange={e => setDraft({ ...draft, breed: e.target.value })} />
-                  : <p className="text-white font-medium pt-2">{live.breed}</p>}
+                  : <p className="text-gray-50 font-medium pt-2">{live.breed}</p>}
               </div>
               <div>
                 <p className="text-gray-500 text-xs mb-1">Fecha de Nacimiento</p>
                 {editing
                   ? <input type="date" className="input" value={draft.birthDate} onChange={e => setDraft({ ...draft, birthDate: e.target.value })} />
-                  : <p className="text-white font-medium pt-2">{live.birthDate}</p>}
+                  : <p className="text-gray-50 font-medium pt-2">{live.birthDate}</p>}
               </div>
               <div>
                 <p className="text-gray-500 text-xs mb-1">Hora de Nacimiento</p>
                 {editing
                   ? <input type="time" className="input" value={draft.birthTime} onChange={e => setDraft({ ...draft, birthTime: e.target.value })} />
-                  : <p className="text-white font-medium pt-2">{live.birthTime ?? '—'}</p>}
+                  : <p className="text-gray-50 font-medium pt-2">{live.birthTime ?? '—'}</p>}
               </div>
             </div>
           </div>
 
           {/* Historial de servicios / montas */}
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+            <h3 className="text-gray-50 font-semibold mb-3 flex items-center gap-2">
               <Syringe size={16} className="text-brand-400" /> Servicios / Montas
               <span className="text-gray-500 text-sm font-normal">({animalServices.length})</span>
             </h3>
@@ -389,7 +389,7 @@ export default function AnimalDetail({ animal: initial, onClose }: Props) {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-primary-800/40 text-gray-400">
+                  <thead className="bg-gray-800/60 text-gray-400">
                     <tr>
                       <th className="text-left px-3 py-2">Fecha</th>
                       <th className="text-left px-3 py-2">Tipo</th>
@@ -412,7 +412,7 @@ export default function AnimalDetail({ animal: initial, onClose }: Props) {
                             {s.tipoServicio === 'Inseminación Artificial' ? 'I.A.' : 'Monta Natural'}
                           </span>
                         </td>
-                        <td className="px-3 py-2 text-white font-medium">{s.animalTag}</td>
+                        <td className="px-3 py-2 text-gray-50 font-medium">{s.animalTag}</td>
                         <td className="px-3 py-2 text-gray-300">{s.padroteTag ?? '—'}</td>
                         <td className="px-3 py-2 text-gray-400 text-xs">{s.origenSemenNotas ?? '—'}</td>
                         <td className="px-3 py-2 text-gray-400 whitespace-nowrap">{s.expectedFarrowingDate ?? '—'}</td>
@@ -427,7 +427,7 @@ export default function AnimalDetail({ animal: initial, onClose }: Props) {
           {/* Historial de pesajes (editable) */}
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-white font-semibold flex items-center gap-2"><Weight size={16} className="text-brand-400" /> Historial de Pesajes</h3>
+              <h3 className="text-gray-50 font-semibold flex items-center gap-2"><Weight size={16} className="text-brand-400" /> Historial de Pesajes</h3>
               {editing && (
                 <button onClick={() => setWeightsDraft([...weightsDraft, { date: currentDate, weight: 0 }])} className="text-brand-400 hover:text-brand-300 text-sm flex items-center gap-1">
                   <Plus size={14} /> Añadir pesaje
@@ -467,7 +467,7 @@ export default function AnimalDetail({ animal: initial, onClose }: Props) {
                 <ul className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
                   {live.weights.map((w, i) => (
                     <li key={i} className="bg-gray-800/40 rounded-lg px-3 py-1.5 flex justify-between">
-                      <span className="text-gray-400">{w.date}</span><span className="text-white font-medium">{w.weight} lb</span>
+                      <span className="text-gray-400">{w.date}</span><span className="text-gray-50 font-medium">{w.weight} lb</span>
                     </li>
                   ))}
                 </ul>
@@ -477,7 +477,7 @@ export default function AnimalDetail({ animal: initial, onClose }: Props) {
 
           {/* Historial de partos */}
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-            <h3 className="text-white font-semibold mb-3 flex items-center gap-2"><Baby size={16} className="text-brand-400" /> Historial de Partos <span className="text-gray-500 text-sm font-normal">({farrowings})</span></h3>
+            <h3 className="text-gray-50 font-semibold mb-3 flex items-center gap-2"><Baby size={16} className="text-brand-400" /> Historial de Partos <span className="text-gray-500 text-sm font-normal">({farrowings})</span></h3>
             {partoEvents.length === 0 ? (
               <p className="text-gray-600 text-sm">Sin partos registrados.</p>
             ) : (
@@ -494,14 +494,14 @@ export default function AnimalDetail({ animal: initial, onClose }: Props) {
           {/* Genealogía + Vacunas */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-              <h3 className="text-white font-semibold mb-3">Genealogía</h3>
+              <h3 className="text-gray-50 font-semibold mb-3">Genealogía</h3>
               <div className="space-y-1 text-sm">
-                <p className="text-gray-300">Madre ID: <span className="text-white">{live.madre_id ?? '—'}</span></p>
-                <p className="text-gray-300">Padrote ID: <span className="text-white">{live.padrote_id ?? '—'}</span></p>
+                <p className="text-gray-300">Madre ID: <span className="text-gray-50">{live.madre_id ?? '—'}</span></p>
+                <p className="text-gray-300">Padrote ID: <span className="text-gray-50">{live.padrote_id ?? '—'}</span></p>
               </div>
             </div>
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-              <h3 className="text-white font-semibold mb-3 flex items-center gap-2"><Syringe size={16} className="text-brand-400" /> Vacunas</h3>
+              <h3 className="text-gray-50 font-semibold mb-3 flex items-center gap-2"><Syringe size={16} className="text-brand-400" /> Vacunas</h3>
               {live.vaccinations.length === 0 ? (
                 <p className="text-gray-600 text-sm">Sin registros</p>
               ) : (
@@ -516,7 +516,7 @@ export default function AnimalDetail({ animal: initial, onClose }: Props) {
 
           {/* Historial completo */}
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-            <h3 className="text-white font-semibold mb-3 flex items-center gap-2"><Clock size={16} className="text-brand-400" /> Historial Completo</h3>
+            <h3 className="text-gray-50 font-semibold mb-3 flex items-center gap-2"><Clock size={16} className="text-brand-400" /> Historial Completo</h3>
             <ul className="space-y-1">
               {[...live.history].reverse().map((h, i) => (
                 <li key={i} className="text-sm text-gray-300 border-l-2 border-gray-700 pl-3 py-0.5">
@@ -552,14 +552,14 @@ export default function AnimalDetail({ animal: initial, onClose }: Props) {
       {confirmDelete && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[70] p-4">
           <div className="bg-gray-900 border border-red-800/50 rounded-xl p-6 w-full max-w-sm">
-            <h3 className="text-white font-semibold mb-2 flex items-center gap-2"><Trash2 size={18} className="text-red-400" /> Eliminar {live.tag}</h3>
+            <h3 className="text-gray-50 font-semibold mb-2 flex items-center gap-2"><Trash2 size={18} className="text-red-400" /> Eliminar {live.tag}</h3>
             <p className="text-gray-400 text-sm mb-5">
-              Esta acción borra el animal <b className="text-white">permanentemente</b> de la base de datos.
+              Esta acción borra el animal <b className="text-gray-50">permanentemente</b> de la base de datos.
               Úsala solo si fue creado por error. No se puede deshacer.
             </p>
             <div className="flex justify-end gap-3">
               <button onClick={() => setConfirmDelete(false)} className="btn-secondary">Cancelar</button>
-              <button onClick={handleDelete} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-red-600 hover:bg-red-500 text-white">
+              <button onClick={handleDelete} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-red-600 hover:bg-red-500 text-gray-50">
                 <Trash2 size={15} /> Eliminar definitivamente
               </button>
             </div>

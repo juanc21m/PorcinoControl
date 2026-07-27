@@ -30,12 +30,12 @@ export default function ContactDetail({ contact, onClose }: Props) {
     <div className="fixed right-0 top-0 h-screen w-96 bg-gray-900 border-l border-gray-800 z-40 overflow-y-auto">
       <div className="sticky top-0 bg-gray-900 border-b border-gray-800 px-5 py-4 flex items-center justify-between">
         <div>
-          <h2 className="text-white font-semibold text-lg">{contact.commercialName}</h2>
+          <h2 className="text-gray-50 font-semibold text-lg">{contact.commercialName}</h2>
           <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${contact.type === 'Cliente' ? 'bg-blue-500/20 text-blue-400' : 'bg-brand-800/30 text-brand-400'}`}>
             {contact.type}
           </span>
         </div>
-        <button onClick={onClose} className="text-gray-400 hover:text-white">
+        <button onClick={onClose} className="text-gray-400 hover:text-gray-50">
           <X size={20} />
         </button>
       </div>
@@ -54,7 +54,7 @@ export default function ContactDetail({ contact, onClose }: Props) {
         {/* Facturas */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-white font-semibold text-sm flex items-center gap-2">
+            <h3 className="text-gray-50 font-semibold text-sm flex items-center gap-2">
               <FileText size={15} className="text-brand-400" /> Estado de Cuenta
             </h3>
             {totalPending > 0 && (
@@ -76,7 +76,7 @@ export default function ContactDetail({ contact, onClose }: Props) {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-white font-semibold text-sm">${inv.amount.toLocaleString()}</p>
+                    <p className="text-gray-50 font-semibold text-sm">${inv.amount.toLocaleString()}</p>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[inv.status]}`}>{inv.status}</span>
                   </div>
                 </div>

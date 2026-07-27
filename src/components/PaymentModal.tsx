@@ -30,11 +30,11 @@ export default function PaymentModal({ title, amount, date, onConfirm, onClose }
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 w-full max-w-md">
         <div className="flex items-center justify-between mb-1">
-          <h2 className="text-white font-semibold text-lg flex items-center gap-2">
+          <h2 className="text-gray-50 font-semibold text-lg flex items-center gap-2">
             <CreditCard size={18} className="text-brand-400" />
             ¿Método de Pago?
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-50">
             <X size={20} />
           </button>
         </div>
@@ -51,7 +51,7 @@ export default function PaymentModal({ title, amount, date, onConfirm, onClose }
                   onClick={() => setMethod(m)}
                   className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
                     method === m
-                      ? 'bg-brand-800 border-brand-600 text-white shadow-glow'
+                      ? 'bg-brand-800 border-brand-600 text-gray-50 shadow-glow'
                       : 'bg-gray-800/50 border-gray-700 text-gray-300 hover:bg-gray-800'
                   }`}
                 >

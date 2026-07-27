@@ -122,7 +122,7 @@ export default function Movilizacion() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-gray-50 flex items-center gap-2">
           <ArrowRightLeft size={22} className="text-brand-400" /> Movilización
         </h1>
         <p className="text-gray-400 text-sm mt-0.5">Transferencia de animales entre zonas y salas</p>
@@ -137,7 +137,7 @@ export default function Movilizacion() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* ---------------- PANEL ORIGEN ---------------- */}
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-4">
-          <h3 className="text-white font-semibold">Origen</h3>
+          <h3 className="text-gray-50 font-semibold">Origen</h3>
           <ZonePicker
             label="Zona de origen" zone={fromZone} room={fromRoom}
             onZone={z => { setFromZone(z); setPicked([]); }}
@@ -206,7 +206,7 @@ export default function Movilizacion() {
             <>
               <div className="flex items-center justify-between">
                 <button onClick={toggleAll} disabled={!available.length}
-                  className="flex items-center gap-2 text-sm text-gray-300 hover:text-white disabled:opacity-40">
+                  className="flex items-center gap-2 text-sm text-gray-300 hover:text-gray-50 disabled:opacity-40">
                   {allPicked ? <CheckSquare size={16} className="text-brand-400" /> : <Square size={16} />}
                   Seleccionar todos ({available.length})
                 </button>
@@ -241,7 +241,7 @@ export default function Movilizacion() {
 
         {/* ---------------- PANEL DESTINO ---------------- */}
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-4">
-          <h3 className="text-white font-semibold">Destino</h3>
+          <h3 className="text-gray-50 font-semibold">Destino</h3>
           <ZonePicker
             label="Zona de destino" zone={toZone} room={toRoom}
             onZone={setToZone} onRoom={setToRoom}
@@ -250,7 +250,7 @@ export default function Movilizacion() {
 
           <div className="bg-gray-800/40 border border-gray-800 rounded-lg p-4 space-y-1">
             <p className="text-gray-400 text-sm">
-              Ocupación actual: <span className="text-white font-semibold">{destOccupied} / {destCap}</span>
+              Ocupación actual: <span className="text-gray-50 font-semibold">{destOccupied} / {destCap}</span>
             </p>
             <p className="text-gray-500 text-xs">
               {ZONES[toZone].rooms} {ZONES[toZone].rooms === 1 ? 'sala' : 'salas'} ·
@@ -290,12 +290,12 @@ export default function Movilizacion() {
       <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
         <div className="px-5 py-3 border-b border-gray-800 flex items-center gap-2">
           <History size={16} className="text-brand-400" />
-          <h3 className="text-white font-semibold">Historial de Movilizaciones</h3>
+          <h3 className="text-gray-50 font-semibold">Historial de Movilizaciones</h3>
           <span className="text-gray-500 text-sm">({transfers.length})</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-primary-800/40 text-gray-400">
+            <thead className="bg-gray-800/60 text-gray-400">
               <tr>
                 <th className="text-left px-5 py-3">Fecha</th>
                 <th className="text-left px-5 py-3">Cerdo / Cantidad</th>
@@ -314,7 +314,7 @@ export default function Movilizacion() {
                   <td className="px-5 py-3">
                     {t.animalTag
                       ? <span className="font-mono text-brand-400 font-semibold">{t.animalTag}</span>
-                      : <span className="text-white font-semibold">{t.count} animales</span>}
+                      : <span className="text-gray-50 font-semibold">{t.count} animales</span>}
                   </td>
                   <td className="px-5 py-3 text-gray-300">
                     {t.fromZone}{t.fromRoom ? ` · Sala ${t.fromRoom}` : ''}

@@ -56,7 +56,7 @@ export default function Inventory() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-gray-50 flex items-center gap-2">
           <Package size={22} className="text-brand-400" /> Inventario de Alimentos
         </h1>
         <p className="text-gray-400 text-sm mt-0.5">Control de stock, cargas y consumos</p>
@@ -81,7 +81,7 @@ export default function Inventory() {
                   </span>
                 )}
               </div>
-              <p className="text-4xl font-bold text-white">{data.sacos}</p>
+              <p className="text-4xl font-bold text-gray-50">{data.sacos}</p>
               <p className="text-gray-500 text-sm mt-1">sacos</p>
               <div className="mt-3 pt-3 border-t border-gray-800">
                 <p className="text-brand-400 font-semibold">{data.lb.toLocaleString()} lb</p>
@@ -96,10 +96,10 @@ export default function Inventory() {
       <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
         <div className="px-5 py-3 border-b border-gray-800 flex items-center gap-2">
           <Wheat size={16} className="text-brand-400" />
-          <h3 className="text-white font-semibold">Stock Actual</h3>
+          <h3 className="text-gray-50 font-semibold">Stock Actual</h3>
         </div>
         <table className="w-full text-sm">
-          <thead className="bg-primary-800/40">
+          <thead className="bg-gray-800/60">
             <tr className="text-gray-400">
               <th className="text-left px-5 py-3">Tipo de Alimento</th>
               <th className="text-left px-5 py-3">Sacos en Stock</th>
@@ -120,10 +120,10 @@ export default function Inventory() {
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-2">
                       <span className={`w-2 h-2 rounded-full ${feedColors[type].dot}`} />
-                      <span className="text-white font-medium">{type}</span>
+                      <span className="text-gray-50 font-medium">{type}</span>
                     </div>
                   </td>
-                  <td className="px-5 py-3 text-white font-semibold">{data.sacos}</td>
+                  <td className="px-5 py-3 text-gray-50 font-semibold">{data.sacos}</td>
                   <td className="px-5 py-3 text-gray-300">{data.lb.toLocaleString()}</td>
                   <td className="px-5 py-3 text-gray-400">{dailyLb} lb</td>
                   <td className="px-5 py-3">
@@ -148,7 +148,7 @@ export default function Inventory() {
 
         {/* Load form */}
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-          <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+          <h3 className="text-gray-50 font-semibold mb-4 flex items-center gap-2">
             <PlusCircle size={16} className="text-green-400" /> Cargar Alimento
           </h3>
           <form onSubmit={handleLoad} className="space-y-4">
@@ -183,7 +183,7 @@ export default function Inventory() {
             </div>
             {loadForm.sacos && (
               <div className="bg-brand-800/10 border border-brand-800/30 rounded-lg px-4 py-2 text-sm text-gray-300">
-                Se agregarán <span className="text-white font-semibold">{parseInt(loadForm.sacos || '0') * LB_PER_SACO[loadForm.feedType]} lb</span> al inventario de {loadForm.feedType}
+                Se agregarán <span className="text-gray-50 font-semibold">{parseInt(loadForm.sacos || '0') * LB_PER_SACO[loadForm.feedType]} lb</span> al inventario de {loadForm.feedType}
               </div>
             )}
             {loadError && <p className="text-red-400 text-xs">{loadError}</p>}
@@ -195,7 +195,7 @@ export default function Inventory() {
 
         {/* Use form */}
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-          <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+          <h3 className="text-gray-50 font-semibold mb-4 flex items-center gap-2">
             <MinusCircle size={16} className="text-red-400" /> Usar / Registrar Consumo
           </h3>
           <form onSubmit={handleUse} className="space-y-4">
@@ -221,7 +221,7 @@ export default function Inventory() {
             </div>
             {useForm.sacos && (
               <div className="bg-brand-800/10 border border-brand-800/30 rounded-lg px-4 py-2 text-sm text-gray-300">
-                Equivalente: <span className="text-white font-semibold">{parseInt(useForm.sacos || '0') * LB_PER_SACO[useForm.feedType]} libras</span>
+                Equivalente: <span className="text-gray-50 font-semibold">{parseInt(useForm.sacos || '0') * LB_PER_SACO[useForm.feedType]} libras</span>
               </div>
             )}
             <div>
@@ -233,8 +233,8 @@ export default function Inventory() {
                 onChange={e => setUseForm({ ...useForm, note: e.target.value })}
               />
             </div>
-            <div className="bg-primary-800/40 border border-gray-700 rounded-lg px-4 py-2 text-sm text-gray-400">
-              Disponible: <span className="text-white font-semibold">{inventory[useForm.feedType].lb.toLocaleString()} lb</span> ({inventory[useForm.feedType].sacos} sacos)
+            <div className="bg-gray-800/60 border border-gray-700 rounded-lg px-4 py-2 text-sm text-gray-400">
+              Disponible: <span className="text-gray-50 font-semibold">{inventory[useForm.feedType].lb.toLocaleString()} lb</span> ({inventory[useForm.feedType].sacos} sacos)
             </div>
             {useError && <p className="text-red-400 text-xs">{useError}</p>}
             <button type="submit" className="btn-secondary w-full flex items-center justify-center gap-2 border-red-800/50 hover:bg-red-900/20 text-red-400">
@@ -247,10 +247,10 @@ export default function Inventory() {
       {/* Transaction history */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
         <div className="px-5 py-3 border-b border-gray-800">
-          <h3 className="text-white font-semibold">Últimas Transacciones de Inventario</h3>
+          <h3 className="text-gray-50 font-semibold">Últimas Transacciones de Inventario</h3>
         </div>
         <table className="w-full text-sm">
-          <thead className="bg-primary-800/40">
+          <thead className="bg-gray-800/60">
             <tr className="text-gray-400">
               <th className="text-left px-5 py-3">Fecha</th>
               <th className="text-left px-5 py-3">Tipo</th>
@@ -279,8 +279,8 @@ export default function Inventory() {
                       {tx.operation}
                     </span>
                   </td>
-                  <td className="px-5 py-3 text-white">{tx.sacos ?? '—'}</td>
-                  <td className="px-5 py-3 text-white font-medium">{tx.lb.toLocaleString()}</td>
+                  <td className="px-5 py-3 text-gray-50">{tx.sacos ?? '—'}</td>
+                  <td className="px-5 py-3 text-gray-50 font-medium">{tx.lb.toLocaleString()}</td>
                   <td className="px-5 py-3 text-gray-500 text-xs">{tx.note ?? '—'}</td>
                 </tr>
               ))

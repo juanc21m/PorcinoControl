@@ -81,7 +81,7 @@ function PurchaseForm({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <h2 className="text-white font-semibold text-lg mb-5">Nueva Factura de Compra</h2>
+        <h2 className="text-gray-50 font-semibold text-lg mb-5">Nueva Factura de Compra</h2>
         <form onSubmit={submit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -117,7 +117,7 @@ function PurchaseForm({ onClose }: { onClose: () => void }) {
             </div>
             <div className="bg-gray-800/30 border border-gray-800 rounded-lg overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-primary-800/40 text-gray-400">
+                <thead className="bg-gray-800/60 text-gray-400">
                   <tr>
                     <th className="text-left px-3 py-2 font-medium">Tipo Alimento</th>
                     <th className="text-left px-3 py-2 font-medium">Cantidad</th>
@@ -154,7 +154,7 @@ function PurchaseForm({ onClose }: { onClose: () => void }) {
                           onChange={e => updateRow(i, { pricePerSaco: e.target.value })}
                         />
                       </td>
-                      <td className="px-3 py-2 text-white font-medium whitespace-nowrap">${subtotal(row).toLocaleString()}</td>
+                      <td className="px-3 py-2 text-gray-50 font-medium whitespace-nowrap">${subtotal(row).toLocaleString()}</td>
                       <td className="px-3 py-2">
                         <button
                           type="button" onClick={() => removeRow(i)}
@@ -175,11 +175,11 @@ function PurchaseForm({ onClose }: { onClose: () => void }) {
           <div className="bg-brand-800/10 border border-brand-800/30 rounded-lg px-4 py-3 grid grid-cols-3 gap-3 text-sm">
             <div>
               <p className="text-gray-400 text-xs">Total Sacos</p>
-              <p className="text-white font-semibold">{totalSacos}</p>
+              <p className="text-gray-50 font-semibold">{totalSacos}</p>
             </div>
             <div>
               <p className="text-gray-400 text-xs">Total Libras</p>
-              <p className="text-white font-semibold">{totalLbs.toLocaleString()} lb</p>
+              <p className="text-gray-50 font-semibold">{totalLbs.toLocaleString()} lb</p>
             </div>
             <div>
               <p className="text-gray-400 text-xs">Total Factura</p>
@@ -229,7 +229,7 @@ function SaleForm({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <h2 className="text-white font-semibold text-lg mb-5">Nueva Factura de Venta</h2>
+        <h2 className="text-gray-50 font-semibold text-lg mb-5">Nueva Factura de Venta</h2>
         <form onSubmit={submit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -305,7 +305,7 @@ export default function Finances() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Finanzas</h1>
+        <h1 className="text-2xl font-bold text-gray-50">Finanzas</h1>
         <p className="text-gray-400 text-sm mt-0.5">Libro mayor y control de inventarios</p>
       </div>
 
@@ -319,7 +319,7 @@ export default function Finances() {
           <button
             key={key}
             onClick={() => setTab(key)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === key ? 'bg-brand-800 text-white shadow-glow' : 'text-gray-400 hover:text-white'}`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === key ? 'bg-brand-800 text-gray-50 shadow-glow' : 'text-gray-400 hover:text-gray-50'}`}
           >
             <Icon size={15} /> {label}
           </button>
@@ -336,7 +336,7 @@ export default function Finances() {
           </div>
           <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-primary-800/40">
+              <thead className="bg-gray-800/60">
                 <tr className="text-gray-400">
                   <th className="text-left px-4 py-3">Factura</th>
                   <th className="text-left px-4 py-3">Proveedor</th>
@@ -356,9 +356,9 @@ export default function Finances() {
                     <td className="px-4 py-3 font-mono text-brand-400">{p.invoiceNumber}</td>
                     <td className="px-4 py-3 text-gray-300">{p.supplier}</td>
                     <td className="px-4 py-3 text-gray-300 text-xs">{p.items.map(it => `${it.feedType} ×${it.sacosQty}`).join(', ')}</td>
-                    <td className="px-4 py-3 text-white">{p.totalSacos}</td>
+                    <td className="px-4 py-3 text-gray-50">{p.totalSacos}</td>
                     <td className="px-4 py-3 text-gray-300">{p.totalLbs.toLocaleString()} lb</td>
-                    <td className="px-4 py-3 text-white font-semibold">${p.totalAmount.toLocaleString()}</td>
+                    <td className="px-4 py-3 text-gray-50 font-semibold">${p.totalAmount.toLocaleString()}</td>
                     <td className="px-4 py-3 text-gray-400">{p.date}{p.time ? ` · ${p.time}` : ''}</td>
                     <td className="px-4 py-3">
                       <button
@@ -387,7 +387,7 @@ export default function Finances() {
           </div>
           <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-primary-800/40">
+              <thead className="bg-gray-800/60">
                 <tr className="text-gray-400">
                   <th className="text-left px-4 py-3">Factura</th>
                   <th className="text-left px-4 py-3">Cliente</th>
@@ -405,9 +405,9 @@ export default function Finances() {
                   <tr key={s.id} className="border-t border-gray-800 hover:bg-gray-800/30">
                     <td className="px-4 py-3 font-mono text-brand-400">{s.invoiceNumber}</td>
                     <td className="px-4 py-3 text-gray-300">{s.customer}</td>
-                    <td className="px-4 py-3 text-white">{s.pigCount}</td>
-                    <td className="px-4 py-3 text-white">{s.totalWeightLbs.toLocaleString()}</td>
-                    <td className="px-4 py-3 text-white font-semibold">${s.totalAmount.toLocaleString()}</td>
+                    <td className="px-4 py-3 text-gray-50">{s.pigCount}</td>
+                    <td className="px-4 py-3 text-gray-50">{s.totalWeightLbs.toLocaleString()}</td>
+                    <td className="px-4 py-3 text-gray-50 font-semibold">${s.totalAmount.toLocaleString()}</td>
                     <td className="px-4 py-3 text-gray-400">{s.date}{s.time ? ` · ${s.time}` : ''}</td>
                     <td className="px-4 py-3">
                       <button
@@ -445,7 +445,7 @@ export default function Finances() {
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { label: 'Total Facturado (Ventas)', value: `$${totalBilled.toLocaleString()}`, color: 'text-white' },
+              { label: 'Total Facturado (Ventas)', value: `$${totalBilled.toLocaleString()}`, color: 'text-gray-50' },
               { label: 'Total Cobrado', value: `$${totalCollected.toLocaleString()}`, color: 'text-green-400' },
               { label: 'Pendiente por Cobrar', value: `$${(totalBilled - totalCollected).toLocaleString()}`, color: 'text-yellow-400' },
               { label: 'Total Gastado (Compras)', value: `$${totalSpent.toLocaleString()}`, color: 'text-red-400' },
@@ -458,11 +458,11 @@ export default function Finances() {
           </div>
 
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-            <h3 className="text-white font-semibold mb-4">Resumen Financiero</h3>
+            <h3 className="text-gray-50 font-semibold mb-4">Resumen Financiero</h3>
             <div className="space-y-3">
               <div className="flex justify-between items-center py-2 border-b border-gray-800">
                 <span className="text-gray-400">Margen Bruto</span>
-                <span className="text-white font-semibold">${(totalCollected - totalSpent).toLocaleString()}</span>
+                <span className="text-gray-50 font-semibold">${(totalCollected - totalSpent).toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-gray-800">
                 <span className="text-gray-400">Desvío de Cobranza</span>

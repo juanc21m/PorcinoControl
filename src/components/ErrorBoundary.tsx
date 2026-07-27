@@ -41,7 +41,7 @@ export default class ErrorBoundary extends Component<Props, State> {
               <AlertTriangle className="text-red-400" size={20} />
             </div>
             <div>
-              <h2 className="text-white font-semibold text-lg">Ocurrió un error al mostrar esta sección</h2>
+              <h2 className="text-gray-50 font-semibold text-lg">Ocurrió un error al mostrar esta sección</h2>
               <p className="text-gray-400 text-sm">La app sigue activa; puedes reintentar o navegar a otra sección.</p>
             </div>
           </div>
@@ -55,7 +55,7 @@ export default class ErrorBoundary extends Component<Props, State> {
 
           <button
             onClick={this.handleReset}
-            className="mt-4 bg-brand-800 hover:bg-brand-700 text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors"
+            className="mt-4 bg-brand-800 hover:bg-brand-700 text-gray-50 font-medium px-4 py-2 rounded-lg text-sm transition-colors"
           >
             Reintentar
           </button>

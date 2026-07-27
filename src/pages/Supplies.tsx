@@ -33,7 +33,7 @@ export default function Supplies() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-gray-50 flex items-center gap-2">
             <Boxes size={22} className="text-brand-400" /> Insumos Generales
           </h1>
           <p className="text-gray-400 text-sm mt-0.5">Jabón, papel, guantes y otros consumibles</p>
@@ -47,7 +47,7 @@ export default function Supplies() {
 
       {/* Alta de insumo */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-        <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+        <h3 className="text-gray-50 font-semibold mb-4 flex items-center gap-2">
           <PackagePlus size={16} className="text-green-400" /> Registrar Insumo
         </h3>
         <form onSubmit={handleAdd} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
@@ -77,11 +77,11 @@ export default function Supplies() {
       {/* Listado */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
         <div className="px-5 py-3 border-b border-gray-800">
-          <h3 className="text-white font-semibold">Inventario de Insumos</h3>
+          <h3 className="text-gray-50 font-semibold">Inventario de Insumos</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-primary-800/40 text-gray-400">
+            <thead className="bg-gray-800/60 text-gray-400">
               <tr>
                 <th className="text-left px-5 py-3">Insumo</th>
                 <th className="text-left px-5 py-3">Marca</th>
@@ -99,9 +99,9 @@ export default function Supplies() {
                   const low = s.quantity <= s.minStock;
                   return (
                     <tr key={s.id} className="border-t border-gray-800 hover:bg-gray-800/30">
-                      <td className="px-5 py-3 text-white font-medium">{s.name}</td>
+                      <td className="px-5 py-3 text-gray-50 font-medium">{s.name}</td>
                       <td className="px-5 py-3 text-gray-400">{s.brand ?? '—'}</td>
-                      <td className="px-5 py-3 text-white font-semibold">{s.quantity}</td>
+                      <td className="px-5 py-3 text-gray-50 font-semibold">{s.quantity}</td>
                       <td className="px-5 py-3">
                         <input
                           type="number" min={0}

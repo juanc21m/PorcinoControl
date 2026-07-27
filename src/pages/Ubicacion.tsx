@@ -82,7 +82,7 @@ export default function Ubicacion() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-gray-50 flex items-center gap-2">
           <MapPin size={22} className="text-brand-400" /> Ubicación
         </h1>
         <p className="text-gray-400 text-sm mt-0.5">Zonas, cuartos y ocupación de la granja</p>
@@ -119,7 +119,7 @@ export default function Ubicacion() {
                 <Icon size={20} className={`${accent} shrink-0`} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-white font-semibold">{zone}</h3>
+                    <h3 className="text-gray-50 font-semibold">{zone}</h3>
                     {over && (
                       <span className="flex items-center gap-1 text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full">
                         <AlertTriangle size={11} /> Sobrecupo
@@ -132,7 +132,7 @@ export default function Ubicacion() {
                   </p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-white font-bold text-lg leading-none">
+                  <p className="text-gray-50 font-bold text-lg leading-none">
                     {occupants.length}<span className="text-gray-500 text-sm font-normal"> / {capTotal}</span>
                   </p>
                   <p className="text-gray-500 text-xs mt-0.5">
@@ -218,7 +218,7 @@ export default function Ubicacion() {
                     <div className="px-4 sm:px-5 py-4 space-y-3">
                       <div className="flex items-center justify-between gap-3">
                         <span className="text-gray-300 text-sm font-medium">{cfg.roomLabel(1)}</span>
-                        <span className="text-white text-sm font-semibold">
+                        <span className="text-gray-50 text-sm font-semibold">
                           {occupants.length} / {cfg.capacityPerRoom} ocupados
                         </span>
                       </div>

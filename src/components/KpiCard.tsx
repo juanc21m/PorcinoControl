@@ -25,7 +25,7 @@ export default function KpiCard({ title, value, icon: Icon, trend, color = 'gree
           <Icon size={18} className={c.icon} />
         </div>
       </div>
-      <p className="text-3xl font-bold text-white">{value}</p>
+      <p className="text-3xl font-bold text-gray-50">{value}</p>
       {trend && <p className="text-xs text-gray-500">{trend}</p>}
     </div>
   );

@@ -65,8 +65,8 @@ export default function AnimalForm({ onClose }: Props) {
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-white font-semibold text-lg flex items-center gap-2"><Truck size={20} className="text-brand-400" /> Registrar Compra/Ingreso</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white"><X size={20} /></button>
+          <h2 className="text-gray-50 font-semibold text-lg flex items-center gap-2"><Truck size={20} className="text-brand-400" /> Registrar Compra/Ingreso</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-50"><X size={20} /></button>
         </div>
         <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
@@ -108,7 +108,7 @@ export default function AnimalForm({ onClose }: Props) {
             </select>
           </div>
           <div className="col-span-2 bg-gray-800/40 border border-gray-800 rounded-lg px-4 py-2 text-xs text-gray-400">
-            El animal ingresará a la zona <span className="text-white font-medium">Ceba</span>. Puedes reubicarlo luego desde su perfil.
+            El animal ingresará a la zona <span className="text-gray-50 font-medium">Ceba</span>. Puedes reubicarlo luego desde su perfil.
           </div>
           <div className="col-span-2 flex justify-end gap-3 mt-1">
             <button type="button" onClick={onClose} className="btn-secondary">Cancelar</button>

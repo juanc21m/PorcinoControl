@@ -77,7 +77,7 @@ export default function ProtectedLayout() {
         )}
 
         {/* Barra superior móvil con botón hamburguesa */}
-        <header className="md:hidden sticky top-0 z-30 flex items-center gap-3 h-14 px-4 bg-white border-b border-gray-200 shadow-[0_2px_5px_rgba(0,0,0,0.05)]">
+        <header className="md:hidden sticky top-0 z-30 flex items-center gap-3 h-14 px-4 bg-gray-900 border-b border-gray-800 shadow-sm">
           <button
             onClick={() => setSidebarOpen(true)}
             aria-label="Abrir menú"
