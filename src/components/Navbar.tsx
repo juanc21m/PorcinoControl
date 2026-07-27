@@ -46,9 +46,13 @@ export default function Navbar({ open, onClose }: NavbarProps) {
     }
   };
 
+  // La altura va en dvh y no en vh: en móvil el viewport de 100vh incluye el
+  // espacio que tapa la barra del navegador, así que el pie del menú (tema y
+  // cerrar sesión) quedaba fuera de pantalla, y al ser un aside fijo no había
+  // forma de desplazarse hasta él.
   return (
     <aside
-      className={`fixed left-0 top-0 h-screen w-64 sm:w-56 bg-gray-900 border-r border-gray-800 flex flex-col z-50
+      className={`fixed left-0 top-0 h-dvh w-64 sm:w-56 bg-gray-900 border-r border-gray-800 flex flex-col z-50
         shadow-[2px_0_8px_rgba(0,0,0,0.08)]
         transform transition-transform duration-200 ease-out
         md:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}
@@ -87,7 +91,8 @@ export default function Navbar({ open, onClose }: NavbarProps) {
         ))}
       </nav>
 
-      <div className="px-2 py-3 border-t border-gray-800 space-y-2">
+      {/* pb con safe-area: en iPhone el indicador de inicio tapa el último botón. */}
+      <div className="px-2 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-gray-800 space-y-2">
         {/* Interruptor de tema (preferencia local, por dispositivo) */}
         <button
           onClick={toggleTheme}

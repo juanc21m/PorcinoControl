@@ -27,7 +27,7 @@ export default function ContactDetail({ contact, onClose }: Props) {
   const totalPending = invoices.filter(i => i.status === 'Pendiente').reduce((acc, i) => acc + i.amount, 0);
 
   return (
-    <div className="fixed right-0 top-0 h-screen w-96 bg-gray-900 border-l border-gray-800 z-40 overflow-y-auto">
+    <div className="fixed right-0 top-0 h-dvh w-96 max-w-full bg-gray-900 border-l border-gray-800 z-40 overflow-y-auto">
       <div className="sticky top-0 bg-gray-900 border-b border-gray-800 px-5 py-4 flex items-center justify-between">
         <div>
           <h2 className="text-gray-50 font-semibold text-lg">{contact.commercialName}</h2>
