@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, GitBranch, DollarSign, Database, Package, MapPin, ArrowRightLeft, Contact, LogOut, X, Boxes, FileSpreadsheet, Sun, Moon } from 'lucide-react';
+import { LayoutDashboard, GitBranch, DollarSign, Database, Package, MapPin, ArrowRightLeft, Contact, LogOut, X, Boxes, FileSpreadsheet, Sun, Moon, Users as UsersIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { LOGO_URL, APP_NAME } from '../lib/brand';
@@ -14,6 +14,7 @@ const links = [
   { to: '/finances',    label: 'Finanzas',        icon: DollarSign },
   { to: '/contacts',    label: 'Contactos',       icon: Contact },
   { to: '/reports',     label: 'Reportes',        icon: FileSpreadsheet },
+  { to: '/usuarios',    label: 'Usuarios',        icon: UsersIcon },
   { to: '/portal',      label: 'DB Portal',       icon: Database },
 ];
 
@@ -31,7 +32,9 @@ export default function Navbar({ open, onClose }: NavbarProps) {
   const navigate = useNavigate();
 
   // RBAC: el DB Portal solo es visible para el admin.
-  const visibleLinks = links.filter(l => l.to !== '/portal' || isAdmin);
+  // RBAC: Usuarios y DB Portal solo son visibles para el Admin.
+  const ADMIN_ONLY = ['/portal', '/usuarios'];
+  const visibleLinks = links.filter(l => !ADMIN_ONLY.includes(l.to) || isAdmin);
 
   const handleLogout = async () => {
     onClose();

@@ -183,8 +183,11 @@ interface AppState {
     animalIds: string[],
     data: { toZone: EtapaProductiva; toRoom?: number; user: string; note?: string },
   ) => void;
-  /** Edita campos del perfil (raza, nacimiento, peso). El ID/tag es inmutable. */
-  editAnimal: (id: string, changes: Partial<Pick<Animal, 'breed' | 'birthDate' | 'birthTime' | 'weight'>>) => void;
+  /**
+   * Edita los datos del animal. El ID y el tag son INMUTABLES: se excluyen
+   * del tipo, así que no pueden modificarse ni por error.
+   */
+  editAnimal: (id: string, changes: Partial<Omit<Animal, 'id' | 'tag' | 'weights' | 'vaccinations' | 'history'>>) => void;
   /** Reemplaza el historial de pesajes (y sincroniza el peso actual con el último). */
   setAnimalWeights: (id: string, weights: Animal['weights']) => void;
   /** Borrado físico de un animal creado por error. */

@@ -7,8 +7,12 @@ import { differenceInDays } from 'date-fns';
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from 'recharts';
-import type { Animal, ServiceType } from '../types';
-import { LIFETIME_FARROWING_LIMIT, SERVICE_TYPES, ZONES } from '../types';
+import type { Animal, ServiceType, AnimalRole, HeatStatus } from '../types';
+import {
+  LIFETIME_FARROWING_LIMIT, SERVICE_TYPES, ZONES, ETAPAS,
+  ZONE_ALLOWED_FEEDS, ANIMAL_STATUSES, HEAT_STATUSES, ANIMAL_ROLES,
+} from '../types';
+import { useAuth } from '../context/AuthContext';
 import { safeParseISO } from '../lib/date';
 import { useAppStore } from '../store/appStore';
 
@@ -220,6 +224,7 @@ export default function AnimalDetail({ animal: initial, onClose }: Props) {
   const editAnimal = useAppStore(s => s.editAnimal);
   const setAnimalWeights = useAppStore(s => s.setAnimalWeights);
   const deleteAnimal = useAppStore(s => s.deleteAnimal);
+  const { isAdmin } = useAuth();
 
   const [showFarrowing, setShowFarrowing] = useState(false);
   const [showService, setShowService] = useState(false);
@@ -227,16 +232,42 @@ export default function AnimalDetail({ animal: initial, onClose }: Props) {
 
   // ---- Edición ----
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState({ breed: live.breed, birthDate: live.birthDate, birthTime: live.birthTime ?? '' });
+  const emptyDraft = () => ({
+    breed: live.breed,
+    birthDate: live.birthDate,
+    birthTime: live.birthTime ?? '',
+    gender: live.gender,
+    role: (live.role ?? 'N/A') as AnimalRole | 'N/A',
+    etapaActual: live.etapaActual,
+    roomNumber: String(live.roomNumber ?? ''),
+    feedType: live.feedType,
+    dailyConsumption: String(live.dailyConsumption),
+    status: live.status,
+    heatStatus: (live.heatStatus ?? 'N/A') as HeatStatus | 'N/A',
+  });
+  const [draft, setDraft] = useState(emptyDraft);
   const [weightsDraft, setWeightsDraft] = useState<Animal['weights']>(live.weights);
 
   function startEdit() {
-    setDraft({ breed: live.breed, birthDate: live.birthDate, birthTime: live.birthTime ?? '' });
+    setDraft(emptyDraft());
     setWeightsDraft(live.weights.length ? live.weights : [{ date: live.birthDate, weight: live.weight }]);
     setEditing(true);
   }
   function saveEdit() {
-    editAnimal(live.id, { breed: draft.breed, birthDate: draft.birthDate, birthTime: draft.birthTime || undefined });
+    // El ID/tag no se toca: `editAnimal` lo excluye por tipo.
+    editAnimal(live.id, {
+      breed: draft.breed,
+      birthDate: draft.birthDate,
+      birthTime: draft.birthTime || undefined,
+      gender: draft.gender,
+      role: draft.role === 'N/A' ? undefined : draft.role,
+      etapaActual: draft.etapaActual,
+      roomNumber: draft.roomNumber ? Math.max(1, parseInt(draft.roomNumber) || 1) : undefined,
+      feedType: draft.feedType,
+      dailyConsumption: Number(draft.dailyConsumption) || 0,
+      status: draft.status,
+      heatStatus: draft.heatStatus === 'N/A' ? undefined : draft.heatStatus,
+    });
     setAnimalWeights(live.id, weightsDraft.filter(w => w.date && !isNaN(w.weight)));
     setEditing(false);
   }
@@ -351,11 +382,20 @@ export default function AnimalDetail({ animal: initial, onClose }: Props) {
               </div>
               <div>
                 <p className="text-gray-500 text-xs mb-1">Rol</p>
-                <p className="text-gray-50 font-medium pt-2">{live.role ?? 'N/A'}</p>
+                {editing
+                  ? <select className="input" value={draft.role} onChange={e => setDraft({ ...draft, role: e.target.value as AnimalRole | 'N/A' })}>
+                      {ANIMAL_ROLES.map(r => <option key={r}>{r}</option>)}
+                      <option value="N/A">N/A</option>
+                    </select>
+                  : <p className="text-gray-50 font-medium pt-2">{live.role ?? 'N/A'}</p>}
               </div>
               <div>
                 <p className="text-gray-500 text-xs mb-1">Género</p>
-                <p className="text-gray-50 font-medium pt-2">{live.gender}</p>
+                {editing
+                  ? <select className="input" value={draft.gender} onChange={e => setDraft({ ...draft, gender: e.target.value as Animal['gender'] })}>
+                      <option>Hembra</option><option>Macho</option>
+                    </select>
+                  : <p className="text-gray-50 font-medium pt-2">{live.gender}</p>}
               </div>
               <div>
                 <p className="text-gray-500 text-xs mb-1">Raza</p>
@@ -374,6 +414,63 @@ export default function AnimalDetail({ animal: initial, onClose }: Props) {
                 {editing
                   ? <input type="time" className="input" value={draft.birthTime} onChange={e => setDraft({ ...draft, birthTime: e.target.value })} />
                   : <p className="text-gray-50 font-medium pt-2">{live.birthTime ?? '—'}</p>}
+              </div>
+
+              <div>
+                <p className="text-gray-500 text-xs mb-1">Zona</p>
+                {editing
+                  ? <select
+                      className="input"
+                      value={draft.etapaActual}
+                      onChange={e => {
+                        const z = e.target.value as Animal['etapaActual'];
+                        setDraft({ ...draft, etapaActual: z, feedType: ZONE_ALLOWED_FEEDS[z][0] });
+                      }}
+                    >
+                      {ETAPAS.map(z => <option key={z}>{z}</option>)}
+                    </select>
+                  : <p className="text-gray-50 font-medium pt-2">{live.etapaActual}</p>}
+              </div>
+              <div>
+                <p className="text-gray-500 text-xs mb-1">Sala</p>
+                {editing
+                  ? <input type="number" min={1} max={ZONES[draft.etapaActual].rooms} className="input"
+                      value={draft.roomNumber} onChange={e => setDraft({ ...draft, roomNumber: e.target.value })} />
+                  : <p className="text-gray-50 font-medium pt-2">
+                      {live.roomNumber ? ZONES[live.etapaActual].roomLabel(live.roomNumber) : '—'}
+                    </p>}
+              </div>
+              <div>
+                <p className="text-gray-500 text-xs mb-1">Alimento</p>
+                {editing
+                  ? <select className="input" value={draft.feedType} onChange={e => setDraft({ ...draft, feedType: e.target.value as Animal['feedType'] })}>
+                      {ZONE_ALLOWED_FEEDS[draft.etapaActual].map(f => <option key={f}>{f}</option>)}
+                    </select>
+                  : <p className="text-gray-50 font-medium pt-2">{live.feedType}</p>}
+              </div>
+              <div>
+                <p className="text-gray-500 text-xs mb-1">Consumo diario (lb)</p>
+                {editing
+                  ? <input type="number" step="0.1" min={0} className="input"
+                      value={draft.dailyConsumption} onChange={e => setDraft({ ...draft, dailyConsumption: e.target.value })} />
+                  : <p className="text-gray-50 font-medium pt-2">{live.dailyConsumption} lb</p>}
+              </div>
+              <div>
+                <p className="text-gray-500 text-xs mb-1">Estado</p>
+                {editing
+                  ? <select className="input" value={draft.status} onChange={e => setDraft({ ...draft, status: e.target.value as Animal['status'] })}>
+                      {ANIMAL_STATUSES.map(st => <option key={st}>{st}</option>)}
+                    </select>
+                  : <p className="text-gray-50 font-medium pt-2">{live.status}</p>}
+              </div>
+              <div>
+                <p className="text-gray-500 text-xs mb-1">Estado reproductivo</p>
+                {editing
+                  ? <select className="input" value={draft.heatStatus} onChange={e => setDraft({ ...draft, heatStatus: e.target.value as HeatStatus | 'N/A' })}>
+                      {HEAT_STATUSES.map(h => <option key={h}>{h}</option>)}
+                      <option value="N/A">N/A</option>
+                    </select>
+                  : <p className="text-gray-50 font-medium pt-2">{live.heatStatus ?? '—'}</p>}
               </div>
             </div>
           </div>
@@ -535,12 +632,14 @@ export default function AnimalDetail({ animal: initial, onClose }: Props) {
             {live.heatStatus === 'Embarazada' && (
               <button onClick={() => setShowFarrowing(true)} className="btn-primary flex items-center gap-2"><Baby size={16} /> Registrar Parto</button>
             )}
+            {isAdmin && (
             <button
               onClick={() => setConfirmDelete(true)}
               className="ml-auto flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-red-800/50 text-red-400 hover:bg-red-900/20 transition-colors"
             >
               <Trash2 size={16} /> Eliminar animal
             </button>
+            )}
           </div>
         </div>
       </div>
@@ -554,8 +653,8 @@ export default function AnimalDetail({ animal: initial, onClose }: Props) {
           <div className="bg-gray-900 border border-red-800/50 rounded-xl p-6 w-full max-w-sm">
             <h3 className="text-gray-50 font-semibold mb-2 flex items-center gap-2"><Trash2 size={18} className="text-red-400" /> Eliminar {live.tag}</h3>
             <p className="text-gray-400 text-sm mb-5">
-              Esta acción borra el animal <b className="text-gray-50">permanentemente</b> de la base de datos.
-              Úsala solo si fue creado por error. No se puede deshacer.
+              ¿Estás seguro de eliminar este registro? Esta acción borra el animal{' '}
+              <b className="text-gray-50">permanentemente</b> de la base de datos y no se puede deshacer.
             </p>
             <div className="flex justify-end gap-3">
               <button onClick={() => setConfirmDelete(false)} className="btn-secondary">Cancelar</button>

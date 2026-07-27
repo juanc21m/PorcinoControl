@@ -11,6 +11,7 @@ import type {
   Supply,
   Service,
   Transfer,
+  Profile,
 } from '../types';
 
 /**
@@ -293,6 +294,45 @@ function rowToService(r: Row): Service {
     origenSemenNotas: (r.origen_semen_notas as string) ?? undefined,
     expectedFarrowingDate: (r.expected_farrowing_date as string) ?? undefined,
   };
+}
+
+// ---- Profile (usuarios / RBAC) ----
+function rowToProfile(r: Row): Profile {
+  return {
+    id: r.id as string,
+    email: (r.email as string) ?? '',
+    role: (r.role as Profile['role']) ?? 'Operador',
+    status: (r.status as Profile['status']) ?? 'Activo',
+    mustChangePassword: Boolean(r.must_change_password),
+    createdAt: (r.created_at as string) ?? '',
+  };
+}
+
+/** Perfil del usuario autenticado. `null` si la tabla aún no existe. */
+export async function fetchMyProfile(userId: string): Promise<Profile | null> {
+  const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
+  if (error) throw error;
+  return data ? rowToProfile(data) : null;
+}
+
+/** Lista de usuarios (solo admin la puede leer completa según RLS). */
+export async function fetchProfiles(): Promise<Profile[]> {
+  const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: true });
+  if (error) throw error;
+  return (data ?? []).map(rowToProfile);
+}
+
+export async function updateProfile(
+  id: string,
+  changes: Partial<Pick<Profile, 'role' | 'status' | 'mustChangePassword'>>,
+): Promise<void> {
+  const row: Row = {};
+  if ('role' in changes) row.role = changes.role;
+  if ('status' in changes) row.status = changes.status;
+  if ('mustChangePassword' in changes) row.must_change_password = changes.mustChangePassword;
+  if (!Object.keys(row).length) return;
+  const { error } = await supabase.from('profiles').update(row).eq('id', id);
+  if (error) throw error;
 }
 
 // ---- Transfer (movilizaciones) ----

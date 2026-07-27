@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { fetchMyProfile } from '../lib/db';
+import type { Profile, UserRole } from '../types';
 
 export type Role = 'admin' | 'user';
 
@@ -11,10 +13,14 @@ export type Role = 'admin' | 'user';
  *  - admin: acceso total (incl. DB Portal)
  *  - user : acceso restringido
  */
-const ADMIN_EMAILS = ['juan59824@gmail.com'];
+/**
+ * Fallback de emergencia: si la tabla `profiles` todavía no existe (migración
+ * pendiente) se usa esta lista para no quedarse sin administrador.
+ */
+const FALLBACK_ADMIN_EMAILS = ['juan59824@gmail.com'];
 
-function roleForEmail(email?: string | null): Role {
-  return email && ADMIN_EMAILS.includes(email.trim().toLowerCase()) ? 'admin' : 'user';
+function fallbackRole(email?: string | null): UserRole {
+  return email && FALLBACK_ADMIN_EMAILS.includes(email.trim().toLowerCase()) ? 'Admin' : 'Operador';
 }
 
 interface AuthContextValue {
@@ -22,6 +28,11 @@ interface AuthContextValue {
   user: User | null;
   email: string | null;
   role: Role | null;
+  /** Perfil (rol/estado) leído de la tabla `profiles`. */
+  profile: Profile | null;
+  userRole: UserRole | null;
+  /** true si el usuario aún tiene la contraseña temporal y debe cambiarla. */
+  mustChangePassword: boolean;
   isAuthenticated: boolean;
   isAdmin: boolean;
   loading: boolean;
@@ -30,6 +41,9 @@ interface AuthContextValue {
   /** Devuelve un mensaje de error (string) o `null` si el login fue exitoso. */
   login: (email: string, password: string) => Promise<string | null>;
   logout: () => Promise<void>;
+  /** Fija la contraseña definitiva y limpia el flag de cambio obligatorio. */
+  changePassword: (newPassword: string) => Promise<string | null>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -38,6 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [backendDown, setBackendDown] = useState(false);
+  const [profile, setProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -84,6 +99,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // Carga el perfil (rol/estado) del usuario autenticado desde `profiles`.
+  const loadProfile = async (uid: string | undefined) => {
+    if (!uid) { setProfile(null); return; }
+    try {
+      setProfile(await fetchMyProfile(uid));
+    } catch (err) {
+      // Tabla `profiles` inexistente o sin permiso: se cae al rol de respaldo.
+      console.error('[auth] no se pudo leer el perfil:', err);
+      setProfile(null);
+    }
+  };
+
+  useEffect(() => {
+    void loadProfile(session?.user?.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id]);
+
+  const refreshProfile = async () => { await loadProfile(session?.user?.id); };
+
+  const changePassword = async (newPassword: string): Promise<string | null> => {
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) return error.message;
+      // Limpia el flag para que no vuelva a pedir el cambio.
+      if (session?.user?.id) {
+        const { error: pErr } = await supabase
+          .from('profiles')
+          .update({ must_change_password: false })
+          .eq('id', session.user.id);
+        if (pErr) console.error('[auth] no se pudo limpiar must_change_password:', pErr);
+      }
+      await loadProfile(session?.user?.id);
+      return null;
+    } catch (err) {
+      console.error('[auth] changePassword falló:', err);
+      return err instanceof Error ? err.message : 'No se pudo actualizar la contraseña';
+    }
+  };
+
   const login = async (email: string, password: string): Promise<string | null> => {
     try {
       const { error } = await supabase.auth.signInWithPassword({
@@ -113,19 +167,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const user = session?.user ?? null;
   const email = user?.email ?? null;
-  const role = user ? roleForEmail(email) : null;
+  // El rol viene de `profiles`; si aún no hay tabla/perfil, se usa el respaldo.
+  const userRole: UserRole | null = user ? (profile?.role ?? fallbackRole(email)) : null;
+  const role: Role | null = user ? (userRole === 'Admin' ? 'admin' : 'user') : null;
 
   const value: AuthContextValue = {
     session,
     user,
     email,
     role,
+    profile,
+    userRole,
+    mustChangePassword: !!profile?.mustChangePassword,
     isAuthenticated: !!session,
-    isAdmin: role === 'admin',
+    isAdmin: userRole === 'Admin',
     loading,
     backendDown,
     login,
     logout,
+    changePassword,
+    refreshProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

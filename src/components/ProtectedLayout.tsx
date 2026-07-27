@@ -3,6 +3,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 import Navbar from './Navbar';
 import ErrorBoundary from './ErrorBoundary';
+import ChangePassword from '../pages/ChangePassword';
 import { useAppStore } from '../store/appStore';
 import { useAuth } from '../context/AuthContext';
 import { LOGO_URL, APP_NAME } from '../lib/brand';
@@ -44,7 +45,7 @@ function DataLoader() {
  * el chrome del ERP (navbar + contenido) con el daemon biológico activo.
  */
 export default function ProtectedLayout() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, mustChangePassword } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Mientras Supabase restaura la sesión persistida, esperar (evita un rebote
@@ -58,6 +59,10 @@ export default function ProtectedLayout() {
   }
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
+
+  // Primer inicio de sesión con contraseña temporal: se interrumpe el acceso al
+  // ERP hasta que el usuario defina su contraseña definitiva.
+  if (mustChangePassword) return <ChangePassword />;
 
   return (
     <>

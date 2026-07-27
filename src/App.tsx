@@ -14,6 +14,7 @@ import Supplies from './pages/Supplies';
 import Finances from './pages/Finances';
 import Contacts from './pages/Contacts';
 import Reports from './pages/Reports';
+import Users from './pages/Users';
 import DatabasePortal from './pages/DatabasePortal';
 
 export default function App() {
@@ -38,6 +39,7 @@ export default function App() {
             <Route path="/finances" element={<Finances />} />
             <Route path="/contacts" element={<Contacts />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/usuarios" element={<Users />} />
             <Route path="/portal" element={<DatabasePortal />} />
           </Route>
 

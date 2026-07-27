@@ -1,6 +1,10 @@
 export type AnimalRole = 'Madre' | 'Padrote' | 'Ceba';
 export type AnimalStatus = 'Activo' | 'Despachado' | 'Fallecido' | 'Descarte/Matadero';
 export type HeatStatus = 'En Celo' | 'Inseminada' | 'Embarazada' | 'Lactante' | 'Vacía' | 'Abierta';
+
+export const ANIMAL_ROLES: readonly AnimalRole[] = ['Madre', 'Padrote', 'Ceba'] as const;
+export const ANIMAL_STATUSES: readonly AnimalStatus[] = ['Activo', 'Despachado', 'Fallecido', 'Descarte/Matadero'] as const;
+export const HEAT_STATUSES: readonly HeatStatus[] = ['En Celo', 'Inseminada', 'Embarazada', 'Lactante', 'Vacía', 'Abierta'] as const;
 export type FeedType =
   | 'Gestación'
   | 'Lactancia'
@@ -181,6 +185,31 @@ export interface Service {
   /** Origen de la dosis (proveedor, casa genética, lote…). Solo en I.A. */
   origenSemenNotas?: string;
   expectedFarrowingDate?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Usuarios, roles y permisos (RBAC)
+// ---------------------------------------------------------------------------
+
+export type UserRole = 'Admin' | 'Operador';
+
+export const USER_ROLES: readonly UserRole[] = ['Admin', 'Operador'] as const;
+
+export type UserStatus = 'Activo' | 'Revocado';
+
+/**
+ * Perfil de usuario. Espeja `auth.users` en la tabla pública `profiles` para
+ * que el frontend pueda leer/escribir rol y estado bajo RLS, sin necesitar la
+ * llave privilegiada (service_role) en el navegador.
+ */
+export interface Profile {
+  id: string;                  // = auth.users.id
+  email: string;
+  role: UserRole;
+  status: UserStatus;
+  /** true mientras el usuario siga con la contraseña temporal asignada. */
+  mustChangePassword: boolean;
+  createdAt: string;
 }
 
 // ---------------------------------------------------------------------------
