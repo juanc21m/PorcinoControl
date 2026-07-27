@@ -83,7 +83,7 @@ export function evaluateBiologicalRules(animals: Animal[], currentDate: string):
       } else if (
         age >= BIO.WEANING_DAYS &&
         age < BIO.CEBA_TRANSITION_DAY &&
-        a.etapaActual === 'Maternidad'
+        (a.etapaActual === 'Maternidad' || a.etapaActual === 'Lechones')
       ) {
         mutations.push({
           animalId: a.id,
