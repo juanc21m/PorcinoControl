@@ -154,7 +154,9 @@ begin
       ) values (
         gen_random_uuid(),
         v_tag, 'Ceba', v_gender, 'Landrace x Yorkshire', current_date - 10, 12,
-        'Lechones', 'Lactancia', 0.5, 'Activo',
+        -- daily_consumption = 0: el lechón lactante no consume alimento propio,
+        -- come de la madre. Empieza a consumir Fases al destetarse.
+        'Lechones', 'Lactancia', 0, 'Activo',
         v_madres[v_i], now()
       );
     end loop;
