@@ -10,6 +10,7 @@ import type {
   InventoryTransaction,
   Supply,
   Service,
+  Transfer,
 } from '../types';
 
 /**
@@ -294,6 +295,39 @@ function rowToService(r: Row): Service {
   };
 }
 
+// ---- Transfer (movilizaciones) ----
+function transferToRow(t: Transfer): Row {
+  return clean({
+    id: t.id,
+    date: t.date,
+    animal_id: t.animalId ?? null,
+    animal_tag: t.animalTag ?? null,
+    count: t.count,
+    from_zone: t.fromZone,
+    from_room: t.fromRoom ?? null,
+    to_zone: t.toZone,
+    to_room: t.toRoom ?? null,
+    "user": t.user,
+    note: t.note ?? null,
+  });
+}
+
+function rowToTransfer(r: Row): Transfer {
+  return {
+    id: r.id as string,
+    date: r.date as string,
+    animalId: (r.animal_id as string) ?? undefined,
+    animalTag: (r.animal_tag as string) ?? undefined,
+    count: Number(r.count),
+    fromZone: r.from_zone as Transfer['fromZone'],
+    fromRoom: r.from_room === null || r.from_room === undefined ? undefined : Number(r.from_room),
+    toZone: r.to_zone as Transfer['toZone'],
+    toRoom: r.to_room === null || r.to_room === undefined ? undefined : Number(r.to_room),
+    user: (r.user as string) ?? '',
+    note: (r.note as string) ?? undefined,
+  };
+}
+
 function rowsToInventory(rows: Row[]): FeedInventory {
   const inv = Object.fromEntries(
     FEED_TYPES.map(t => [t, { sacos: 0, lb: 0 }]),
@@ -318,10 +352,11 @@ export interface AllData {
   inventoryHistory: InventoryTransaction[];
   supplies: Supply[];
   services: Service[];
+  transfers: Transfer[];
 }
 
 export async function fetchAllData(): Promise<AllData> {
-  const [animalsRes, contactsRes, purchasesRes, salesRes, invRes, txRes, suppliesRes, servicesRes] = await Promise.all([
+  const [animalsRes, contactsRes, purchasesRes, salesRes, invRes, txRes, suppliesRes, servicesRes, transfersRes] = await Promise.all([
     supabase.from('animals').select('*').order('created_at', { ascending: true }),
     supabase.from('contacts').select('*').order('created_at', { ascending: true }),
     supabase.from('purchase_invoices').select('*').order('date', { ascending: false }),
@@ -330,11 +365,12 @@ export async function fetchAllData(): Promise<AllData> {
     supabase.from('inventory_transactions').select('*').order('date', { ascending: false }),
     supabase.from('supplies').select('*').order('name', { ascending: true }),
     supabase.from('services').select('*').order('date', { ascending: false }),
+    supabase.from('transfers').select('*').order('date', { ascending: false }),
   ]);
 
   const firstError =
     animalsRes.error || contactsRes.error || purchasesRes.error ||
-    salesRes.error || invRes.error || txRes.error || suppliesRes.error || servicesRes.error;
+    salesRes.error || invRes.error || txRes.error || suppliesRes.error || servicesRes.error || transfersRes.error;
   if (firstError) throw firstError;
 
   return {
@@ -346,6 +382,7 @@ export async function fetchAllData(): Promise<AllData> {
     inventoryHistory: (txRes.data ?? []).map(rowToTx),
     supplies: (suppliesRes.data ?? []).map(rowToSupply),
     services: (servicesRes.data ?? []).map(rowToService),
+    transfers: (transfersRes.data ?? []).map(rowToTransfer),
   };
 }
 
@@ -461,6 +498,13 @@ export async function updateSupply(id: string, changes: Partial<Supply>): Promis
   if ('minStock' in changes) row.min_stock = changes.minStock;
   if (!Object.keys(row).length) return;
   const { error } = await supabase.from('supplies').update(row).eq('id', id);
+  if (error) throw error;
+}
+
+// ---- Movilizaciones ----
+export async function insertTransfers(list: Transfer[]): Promise<void> {
+  if (!list.length) return;
+  const { error } = await supabase.from('transfers').insert(list.map(transferToRow));
   if (error) throw error;
 }
 

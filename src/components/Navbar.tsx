@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, GitBranch, DollarSign, Database, Package, MapPin, Contact, LogOut, X, Boxes, FileSpreadsheet } from 'lucide-react';
+import { LayoutDashboard, GitBranch, DollarSign, Database, Package, MapPin, ArrowRightLeft, Contact, LogOut, X, Boxes, FileSpreadsheet } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { LOGO_URL, APP_NAME } from '../lib/brand';
 
@@ -7,6 +7,7 @@ const links = [
   { to: '/dashboard',   label: 'Dashboard',      icon: LayoutDashboard },
   { to: '/traceability',label: 'Trazabilidad',   icon: GitBranch },
   { to: '/ubicacion',   label: 'Ubicación',       icon: MapPin },
+  { to: '/movilizacion',label: 'Movilización',    icon: ArrowRightLeft },
   { to: '/inventory',   label: 'Inventario',      icon: Package },
   { to: '/supplies',    label: 'Insumos',         icon: Boxes },
   { to: '/finances',    label: 'Finanzas',        icon: DollarSign },

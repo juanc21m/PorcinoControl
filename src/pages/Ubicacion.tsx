@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
+import { useAuth } from '../context/AuthContext';
 import { ETAPAS, ZONES } from '../types';
 import type { Animal, EtapaProductiva } from '../types';
 import AnimalDetail from '../components/AnimalDetail';
@@ -11,6 +12,7 @@ import AnimalDetail from '../components/AnimalDetail';
 const ZONE_META: Record<EtapaProductiva, { icon: LucideIcon; accent: string; desc: string }> = {
   'Gestación': { icon: HeartPulse, accent: 'text-pink-400',   desc: 'Cerdas servidas / gestantes' },
   Maternidad:  { icon: Baby,       accent: 'text-purple-400', desc: 'Una cerda por sala, con su camada' },
+  'Recién Nacidos': { icon: Baby,  accent: 'text-sky-400',    desc: 'Lechones con ID, aún lactando' },
   Destete:     { icon: Wheat,      accent: 'text-amber-400',  desc: 'Lechones destetados' },
   Ceba:        { icon: Scale,      accent: 'text-brand-400',  desc: 'Engorde hasta venta' },
 };
@@ -64,7 +66,8 @@ function LitterEditor({ sow, onDone }: { sow: Animal; onDone: () => void }) {
 
 export default function Ubicacion() {
   const animals = useAppStore(s => s.animals);
-  const weanLitter = useAppStore(s => s.weanLitter);
+  const materializeLitter = useAppStore(s => s.materializeLitter);
+  const { email } = useAuth();
   const [open, setOpen] = useState<EtapaProductiva[]>(['Maternidad']);
   const [detail, setDetail] = useState<Animal | null>(null);
   const [editingLitter, setEditingLitter] = useState<string | null>(null);
@@ -176,7 +179,12 @@ export default function Ubicacion() {
                                     </button>
                                     {tot > 0 && (
                                       <button
-                                        onClick={() => weanLitter(sow.id)}
+                                        onClick={() => materializeLitter(sow.id, {
+                                          males: sow.litterMales ?? 0,
+                                          females: sow.litterFemales ?? 0,
+                                          toZone: 'Destete',
+                                          user: email ?? 'desconocido',
+                                        })}
                                         className="text-xs border border-amber-700/50 text-amber-400 hover:bg-amber-900/20 px-2 py-1 rounded-lg"
                                         title="Convierte la camada en animales con ID propio en Destete"
                                       >

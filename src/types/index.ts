@@ -33,11 +33,17 @@ export const LB_PER_SACO: Record<FeedType, number> = {
  * Las 4 zonas físicas de la granja. Cada zona se subdivide en cuartos/salas.
  * Son fijas e inmutables.
  */
-export type EtapaProductiva = 'Gestación' | 'Maternidad' | 'Destete' | 'Ceba';
+export type EtapaProductiva =
+  | 'Gestación'
+  | 'Maternidad'
+  | 'Recién Nacidos'
+  | 'Destete'
+  | 'Ceba';
 
 export const ETAPAS: readonly EtapaProductiva[] = [
   'Gestación',
   'Maternidad',
+  'Recién Nacidos',
   'Destete',
   'Ceba',
 ] as const;
@@ -61,10 +67,12 @@ export interface ZoneConfig {
  *  - Ceba:       1 sala,   500 cerdos
  */
 export const ZONES: Record<EtapaProductiva, ZoneConfig> = {
-  'Gestación': { rooms: 1,  capacityPerRoom: 200, roomLabel: () => 'Sala Principal' },
-  'Maternidad': { rooms: 23, capacityPerRoom: 1,  roomLabel: (n) => `Sala ${n}` },
-  'Destete':   { rooms: 1,  capacityPerRoom: 300, roomLabel: () => 'Sala Principal' },
-  'Ceba':      { rooms: 1,  capacityPerRoom: 500, roomLabel: () => 'Sala Principal' },
+  'Gestación':      { rooms: 1,  capacityPerRoom: 200, roomLabel: () => 'Sala Principal' },
+  'Maternidad':     { rooms: 23, capacityPerRoom: 1,   roomLabel: (n) => `Sala ${n}` },
+  // Lechones ya individualizados (con ID) que siguen mamando, antes del destete.
+  'Recién Nacidos': { rooms: 1,  capacityPerRoom: 500, roomLabel: () => 'Sala Principal' },
+  'Destete':        { rooms: 1,  capacityPerRoom: 300, roomLabel: () => 'Sala Principal' },
+  'Ceba':           { rooms: 1,  capacityPerRoom: 500, roomLabel: () => 'Sala Principal' },
 };
 
 /** Capacidad total de la zona (salas × capacidad por sala). */
@@ -76,6 +84,7 @@ export const ETAPA_CAPACITY: Record<EtapaProductiva, number> = Object.fromEntrie
 export const ZONE_DEFAULT_FEED: Record<EtapaProductiva, FeedType> = {
   'Gestación': 'Gestación',
   Maternidad: 'Lactancia',
+  'Recién Nacidos': 'Lactancia',
   Destete: 'Fase 1',
   Ceba: 'Engorde',
 };
@@ -87,6 +96,7 @@ export const ZONE_DEFAULT_FEED: Record<EtapaProductiva, FeedType> = {
 export const ZONE_ALLOWED_FEEDS: Record<EtapaProductiva, FeedType[]> = {
   'Gestación': ['Gestación'],
   Maternidad: ['Lactancia'],
+  'Recién Nacidos': ['Lactancia', 'Fase 1'],
   Destete: ['Fase 1', 'Fase 2', 'Fase 3'],
   Ceba: ['Engorde'],
 };
@@ -174,6 +184,27 @@ export interface Service {
 }
 
 // ---------------------------------------------------------------------------
+// Movilización / Transferencias entre zonas
+// ---------------------------------------------------------------------------
+
+export interface Transfer {
+  id: string;
+  date: string;
+  /** Animal movido. Vacío si el movimiento fue un lote materializado por conteo. */
+  animalId?: string;
+  animalTag?: string;
+  /** Cantidad de animales movidos en la operación (1 en transferencia individual). */
+  count: number;
+  fromZone: EtapaProductiva;
+  fromRoom?: number;
+  toZone: EtapaProductiva;
+  toRoom?: number;
+  /** Usuario que ejecutó la movilización (email de la sesión). */
+  user: string;
+  note?: string;
+}
+
+// ---------------------------------------------------------------------------
 // Contactos (Clientes / Proveedores)
 // ---------------------------------------------------------------------------
 
@@ -248,7 +279,7 @@ export interface SaleInvoice {
 export type AlertSeverity = 'info' | 'warning' | 'critical';
 
 /** Las áreas operativas que agrupan alertas en el Dashboard. */
-export type AlertType = 'Gestación' | 'Maternidad' | 'Destete' | 'Ceba' | 'Inventario';
+export type AlertType = 'Gestación' | 'Maternidad' | 'Recién Nacidos' | 'Destete' | 'Ceba' | 'Inventario';
 
 export interface Alert {
   id: string;

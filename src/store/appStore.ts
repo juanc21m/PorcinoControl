@@ -15,6 +15,7 @@ import type {
   MedicalTask,
   Supply,
   Service,
+  Transfer,
   EtapaProductiva,
 } from '../types';
 import { FEED_TYPES, LB_PER_SACO, ZONE_DEFAULT_FEED, DEFAULT_SUPPLY_MIN_STOCK, ZONES } from '../types';
@@ -39,6 +40,7 @@ import {
   insertSupply,
   updateSupply as dbUpdateSupply,
   insertService,
+  insertTransfers,
 } from '../lib/db';
 
 // ---------------------------------------------------------------------------
@@ -83,12 +85,14 @@ function firstFreeRoom(
   return undefined;
 }
 
-/** Lechón destetado: pasa a ser animal con ID propio en la zona de Destete. */
-function mkWeanedStub(
+/** Lechón materializado: pasa de conteo de camada a animal con ID propio. */
+function mkLitterAnimal(
   tag: string,
   gender: 'Macho' | 'Hembra',
   mother: Animal,
   date: string,
+  zone: EtapaProductiva,
+  room: number | undefined,
 ): Animal {
   return {
     id: crypto.randomUUID(),
@@ -98,16 +102,16 @@ function mkWeanedStub(
     breed: mother.breed,
     birthDate: mother.lastFarrowingDate ?? date,
     weight: 0,
-    etapaActual: 'Destete',
-    roomNumber: 1,
-    feedType: ZONE_DEFAULT_FEED['Destete'],
+    etapaActual: zone,
+    roomNumber: room,
+    feedType: ZONE_DEFAULT_FEED[zone],
     dailyConsumption: 0,
     status: 'Activo',
     madre_id: mother.id,
     padrote_id: mother.padrote_id,
     weights: [],
     vaccinations: [],
-    history: [{ date, event: `Destetado de ${mother.tag}` }],
+    history: [{ date, event: `Individualizado desde la camada de ${mother.tag} → ${zone}` }],
   };
 }
 
@@ -129,6 +133,7 @@ interface AppState {
   contacts: Contact[];
   supplies: Supply[];
   services: Service[];
+  transfers: Transfer[];
   currentDate: string;
   dismissedAlertIds: string[];
   completedTaskIds: string[];
@@ -165,8 +170,19 @@ interface AppState {
   updateLitter: (motherId: string, males: number, females: number) => void;
   /** Reubica un animal a otra sala dentro de su zona. */
   assignRoom: (animalId: string, roomNumber: number) => void;
-  /** Destete: convierte la camada (conteo) en animales con ID propio en Destete. */
-  weanLitter: (motherId: string) => void;
+  /**
+   * Materializa parte (o toda) la camada de una cerda: los lechones dejan de ser
+   * un conteo y pasan a animales con ID propio en la zona destino.
+   */
+  materializeLitter: (
+    motherId: string,
+    data: { males: number; females: number; toZone: EtapaProductiva; toRoom?: number; user: string },
+  ) => void;
+  /** Movilización de animales ya individualizados entre zonas/salas. */
+  transferAnimals: (
+    animalIds: string[],
+    data: { toZone: EtapaProductiva; toRoom?: number; user: string; note?: string },
+  ) => void;
   /** Edita campos del perfil (raza, nacimiento, peso). El ID/tag es inmutable. */
   editAnimal: (id: string, changes: Partial<Pick<Animal, 'breed' | 'birthDate' | 'birthTime' | 'weight'>>) => void;
   /** Reemplaza el historial de pesajes (y sincroniza el peso actual con el último). */
@@ -230,6 +246,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   contacts: [],
   supplies: [],
   services: [],
+  transfers: [],
   currentDate: CURRENT_DATE,
   dismissedAlertIds: [],
   completedTaskIds: [],
@@ -256,6 +273,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         inventoryHistory: data.inventoryHistory,
         supplies: data.supplies,
         services: data.services,
+        transfers: data.transfers,
         loaded: true,
         loading: false,
       });
@@ -345,50 +363,124 @@ export const useAppStore = create<AppState>((set, get) => ({
     persist(updateAnimal(animalId, changes), 'assignRoom');
   },
 
-  weanLitter: (motherId) => {
-    const { animals, currentDate } = get();
+  materializeLitter: (motherId, data) => {
+    const { animals, currentDate, transfers } = get();
     const mother = animals.find(a => a.id === motherId);
     if (!mother) return;
 
-    const males = mother.litterMales ?? 0;
-    const females = mother.litterFemales ?? 0;
-    if (males + females <= 0) return;
+    // No se puede mover más de lo que hay en la camada.
+    const males = Math.min(Math.max(0, data.males), mother.litterMales ?? 0);
+    const females = Math.min(Math.max(0, data.females), mother.litterFemales ?? 0);
+    const total = males + females;
+    if (total <= 0) return;
 
-    // Al destetar, la camada deja de ser un conteo y pasa a animales con ID
-    // propio en la zona de Destete (donde sí ocupan cupo de la sala).
+    const toRoom = data.toRoom ?? firstFreeRoom(animals, data.toZone);
+
+    // Los lechones dejan de ser conteo y reciben ID propio en la zona destino.
     let mNum = nextTagNumber(animals, 'M');
     let hNum = nextTagNumber(animals, 'H');
     const genders: ('Macho' | 'Hembra')[] = [
       ...Array<'Macho'>(males).fill('Macho'),
       ...Array<'Hembra'>(females).fill('Hembra'),
     ];
-    const weaned: Animal[] = genders.map(gender => {
+    const born: Animal[] = genders.map(gender => {
       const tag = gender === 'Macho'
         ? `M-${String(mNum++).padStart(6, '0')}`
         : `H-${String(hNum++).padStart(6, '0')}`;
-      return mkWeanedStub(tag, gender, mother, currentDate);
+      return mkLitterAnimal(tag, gender, mother, currentDate, data.toZone, toRoom);
     });
 
+    const remainingM = (mother.litterMales ?? 0) - males;
+    const remainingF = (mother.litterFemales ?? 0) - females;
+    const isWeaning = data.toZone === 'Destete';
+
     const motherChanges: Partial<Animal> = {
-      heatStatus: 'Vacía',
-      litterMales: undefined,
-      litterFemales: undefined,
-      lastWeaningDate: currentDate,
+      litterMales: remainingM > 0 ? remainingM : undefined,
+      litterFemales: remainingF > 0 ? remainingF : undefined,
+      // Si ya no le queda camada y fue destete, la cerda queda vacía.
+      ...(remainingM + remainingF === 0 && isWeaning
+        ? { heatStatus: 'Vacía' as const, lastWeaningDate: currentDate }
+        : {}),
       history: [
         ...mother.history,
-        { date: currentDate, event: `Destete: ${males + females} lechones (${males}M/${females}H) pasan a Destete con ID propio.` },
+        {
+          date: currentDate,
+          event: `${total} lechones (${males}M/${females}H) de su camada pasan a ${data.toZone} con ID propio.`,
+        },
       ],
+    };
+
+    const log: Transfer = {
+      id: crypto.randomUUID(),
+      date: currentDate,
+      count: total,
+      fromZone: 'Maternidad',
+      fromRoom: mother.roomNumber,
+      toZone: data.toZone,
+      toRoom,
+      user: data.user,
+      note: `Camada de ${mother.tag}: ${males}M/${females}H`,
     };
 
     set({
       animals: [
         ...animals.map(a => (a.id === motherId ? { ...a, ...motherChanges } : a)),
-        ...weaned,
+        ...born,
       ],
+      transfers: [log, ...transfers],
     });
 
-    persist(updateAnimal(motherId, motherChanges), 'weanLitter(cerda)');
-    persist(insertAnimals(weaned), 'weanLitter(lechones destetados)');
+    persist(updateAnimal(motherId, motherChanges), 'materializeLitter(cerda)');
+    persist(insertAnimals(born), 'materializeLitter(lechones)');
+    persist(insertTransfers([log]), 'materializeLitter(log)');
+  },
+
+  transferAnimals: (animalIds, data) => {
+    const { animals, currentDate, transfers } = get();
+    if (!animalIds.length) return;
+
+    const ids = new Set(animalIds);
+    const moving = animals.filter(a => ids.has(a.id));
+    if (!moving.length) return;
+
+    const toRoom = data.toRoom ?? firstFreeRoom(animals, data.toZone);
+    const logs: Transfer[] = [];
+    const patches: { id: string; changes: Partial<Animal> }[] = [];
+
+    const updated = animals.map(a => {
+      if (!ids.has(a.id)) return a;
+      const changes: Partial<Animal> = {
+        etapaActual: data.toZone,
+        roomNumber: toRoom,
+        feedType: ZONE_DEFAULT_FEED[data.toZone],
+        history: [
+          ...a.history,
+          { date: currentDate, event: `Movilizado de ${a.etapaActual} a ${data.toZone}${toRoom ? ` (Sala ${toRoom})` : ''}.` },
+        ],
+      };
+      patches.push({ id: a.id, changes });
+      logs.push({
+        id: crypto.randomUUID(),
+        date: currentDate,
+        animalId: a.id,
+        animalTag: a.tag,
+        count: 1,
+        fromZone: a.etapaActual,
+        fromRoom: a.roomNumber,
+        toZone: data.toZone,
+        toRoom,
+        user: data.user,
+        note: data.note,
+      });
+      return { ...a, ...changes };
+    });
+
+    set({ animals: updated, transfers: [...logs, ...transfers] });
+
+    for (const { id, changes } of patches) {
+      persist(updateAnimal(id, changes), 'transferAnimals(animal)');
+    }
+    persist(insertTransfers(logs), 'transferAnimals(log)');
   },
 
   updateAnimalStatus: (id, status) => {
