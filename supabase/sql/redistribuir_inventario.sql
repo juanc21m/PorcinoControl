@@ -84,8 +84,7 @@ begin
       and etapa_actual in ('Ceba','Destete','Lechones')
   )
   update public.animals a
-     set etapa_actual = case when p.rn <= 246 then 'Destete' else 'Ceba' end,
-         updated_at   = now()
+     set etapa_actual = case when p.rn <= 246 then 'Destete' else 'Ceba' end
     from pool p
    where a.id = p.id;
 
@@ -145,11 +144,11 @@ begin
       insert into public.animals (
         tag, role, gender, breed, birth_date, weight,
         etapa_actual, feed_type, daily_consumption, status,
-        madre_id, created_at, updated_at
+        madre_id, created_at
       ) values (
         v_tag, 'Ceba', v_gender, 'Landrace x Yorkshire', current_date - 10, 12,
         'Lechones', 'Lactancia', 0.5, 'Activo',
-        v_madres[v_i], now(), now()
+        v_madres[v_i], now()
       );
     end loop;
   end loop;
