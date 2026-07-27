@@ -44,11 +44,17 @@ import {
 } from '../lib/db';
 
 // ---------------------------------------------------------------------------
-// Simulated "today" — drives the biological engine.
-// Aligned with ESPECIFICACIONES v3.0 (30 de Mayo, 2026).
+// Fecha operativa: alimenta al motor biológico, las alertas y los formularios.
+//
+// Se toma del reloj del dispositivo con `format` de date-fns, que trabaja en
+// hora LOCAL. No usar toISOString(): eso da UTC y en Panamá (UTC-5) el día
+// cambiaría a las 7 de la tarde, adelantando un día todos los registros.
 // ---------------------------------------------------------------------------
 
-const CURRENT_DATE = '2026-05-30';
+/** Fecha de hoy en zona local, formato YYYY-MM-DD. */
+function todayLocal(): string {
+  return format(new Date(), 'yyyy-MM-dd');
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -150,6 +156,8 @@ interface AppState {
 
   // Lectura inicial desde Supabase
   fetchAll: () => Promise<void>;
+  /** Resincroniza la fecha operativa con el reloj del dispositivo. */
+  syncDate: () => void;
 
   // Animal actions
   addAnimal: (data: Omit<Animal, 'id' | 'tag' | 'weights' | 'vaccinations' | 'history'>) => void;
@@ -255,7 +263,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   supplies: [],
   services: [],
   transfers: [],
-  currentDate: CURRENT_DATE,
+  currentDate: todayLocal(),
   dismissedAlertIds: [],
   completedTaskIds: [],
   loaded: false,
@@ -268,8 +276,14 @@ export const useAppStore = create<AppState>((set, get) => ({
   // -------------------------------------------------------------------------
   // Lectura inicial: rellena el estado desde Supabase.
   // -------------------------------------------------------------------------
+  syncDate: () => {
+    const hoy = todayLocal();
+    if (get().currentDate !== hoy) set({ currentDate: hoy });
+  },
+
   fetchAll: async () => {
-    set({ loading: true, loadError: null });
+    // Al cargar datos siempre se pone la fecha al día.
+    set({ loading: true, loadError: null, currentDate: todayLocal() });
     try {
       const data = await fetchAllData();
       set({

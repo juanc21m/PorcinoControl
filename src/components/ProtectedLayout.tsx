@@ -26,6 +26,23 @@ function BiologicalDaemon() {
 }
 
 /**
+ * Mantiene la fecha operativa al día. Importante en la granja: una tablet puede
+ * quedarse abierta toda la noche y, sin esto, seguiría registrando con la fecha
+ * de ayer después de la medianoche.
+ */
+function DateKeeper() {
+  const syncDate = useAppStore(s => s.syncDate);
+
+  useEffect(() => {
+    syncDate();
+    const id = setInterval(syncDate, 60_000);
+    return () => clearInterval(id);
+  }, [syncDate]);
+
+  return null;
+}
+
+/**
  * Carga el estado desde Supabase una sola vez al entrar al área autenticada.
  * Sin esto, los dashboards y tablas mostrarían el estado vacío en memoria.
  */
@@ -66,6 +83,7 @@ export default function ProtectedLayout() {
 
   return (
     <>
+      <DateKeeper />
       <DataLoader />
       <BiologicalDaemon />
       <div className="min-h-screen bg-gray-950">
