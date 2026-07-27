@@ -20,6 +20,11 @@
 alter table public.animals alter column etapa_actual drop default;
 alter table public.animals alter column etapa_actual type varchar(20);
 
+-- La columna id es UUID SIN default: hasta ahora siempre lo generaba el
+-- navegador (crypto.randomUUID) y por eso nunca se notó. Cualquier INSERT
+-- hecho desde SQL fallaba con "null value in column id".
+alter table public.animals alter column id set default gen_random_uuid();
+
 -- -----------------------------------------------------------------------------
 -- PASO 2 · Reemplazar el CHECK de etapa_actual (el viejo no permite 'Lechones')
 -- -----------------------------------------------------------------------------
@@ -141,11 +146,13 @@ begin
         v_tag := 'H-' || lpad(v_next_h::text, 6, '0');
       end if;
 
+      -- El id se pasa explícito para no depender del default de la tabla.
       insert into public.animals (
-        tag, role, gender, breed, birth_date, weight,
+        id, tag, role, gender, breed, birth_date, weight,
         etapa_actual, feed_type, daily_consumption, status,
         madre_id, created_at
       ) values (
+        gen_random_uuid(),
         v_tag, 'Ceba', v_gender, 'Landrace x Yorkshire', current_date - 10, 12,
         'Lechones', 'Lactancia', 0.5, 'Activo',
         v_madres[v_i], now()
