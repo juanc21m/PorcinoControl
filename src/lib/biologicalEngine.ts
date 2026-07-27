@@ -71,24 +71,37 @@ export function evaluateBiologicalRules(animals: Animal[], currentDate: string):
   for (const a of active) {
     const age = ageInDays(a.birthDate, currentDate);
 
-    // ---- Motor de transición biológica: flujo entre etapas productivas ----
-    // La camada avanza Maternidad → Destete (día 21) → Ceba (día 70).
+    // ---- Flujo entre etapas productivas: SE AVISA, NO SE MUEVE ----
+    // La ubicación física la decide el personal de la granja, así que el motor
+    // nunca reasigna la zona por su cuenta: solo levanta la alerta para que se
+    // haga el traslado desde el módulo de Movilización. Antes sí movía, y eso
+    // deshacía cualquier ubicación cargada a mano.
     if (a.role === 'Ceba') {
       if (age >= BIO.CEBA_TRANSITION_DAY && a.etapaActual !== 'Ceba') {
-        mutations.push({
+        alerts.push({
+          id: `ceba-${a.id}`,
+          type: 'Ceba',
+          severity: 'warning',
+          title: 'Trasladar a Ceba',
+          message: `${a.tag} cumple ${age} días de vida y está en ${a.etapaActual}`,
+          action: 'Trasladar a Ceba',
           animalId: a.id,
-          changes: { etapaActual: 'Ceba' },
-          reason: `Transición automática a Ceba (día ${age} de vida)`,
+          animalTag: a.tag,
         });
       } else if (
         age >= BIO.WEANING_DAYS &&
         age < BIO.CEBA_TRANSITION_DAY &&
         (a.etapaActual === 'Maternidad' || a.etapaActual === 'Lechones')
       ) {
-        mutations.push({
+        alerts.push({
+          id: `destete-${a.id}`,
+          type: 'Destete',
+          severity: 'warning',
+          title: 'Listo para destete',
+          message: `${a.tag} cumple ${age} días de vida y sigue en ${a.etapaActual}`,
+          action: 'Trasladar a Destete',
           animalId: a.id,
-          changes: { etapaActual: 'Destete' },
-          reason: `Destete automático: traslado a etapa Destete (día ${age} de vida)`,
+          animalTag: a.tag,
         });
       }
     }
