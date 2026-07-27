@@ -29,9 +29,22 @@
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
--- 0) Alinea las restricciones de la tabla con el modelo actual
---    (sin esto los INSERT fallan: el CHECK viejo de feed_type solo aceptaba 3)
+-- 0) ESQUEMA: crea las columnas que faltaban y realinea las restricciones
+--
+--    Verificado contra la base: faltaban room_number, litter_males y
+--    litter_females (la migración de zonas/salas nunca se corrió). Los nombres
+--    son los que mapea la app en src/lib/db.ts, así que se crean con ese nombre
+--    exacto — renombrarlas rompería el frontend.
 -- -----------------------------------------------------------------------------
+alter table public.animals add column if not exists room_number    int;
+alter table public.animals add column if not exists litter_males    int;
+alter table public.animals add column if not exists litter_females  int;
+
+-- Por si tampoco se corrieron migraciones anteriores:
+alter table public.animals add column if not exists birth_time      text;
+alter table public.animals add column if not exists fecha_muerte    date;
+alter table public.animals add column if not exists causa_muerte    text;
+
 alter table public.animals alter column role drop not null;
 
 alter table public.animals drop constraint if exists animals_etapa_actual_check;
