@@ -21,9 +21,7 @@
 -- -----------------------------------------------------------------------------
 -- PASO 1 · Preparar la tabla
 -- -----------------------------------------------------------------------------
--- Mismo caso que animals: la columna id es UUID sin default porque hasta ahora
--- siempre lo generaba el navegador.
-alter table public.feed_inventory alter column id set default gen_random_uuid();
+-- Esta tabla NO tiene columna id: la fila se identifica por feed_type.
 
 -- El catálogo creció a 7 tipos; el CHECK viejo solo permitía 3.
 do $$
@@ -52,8 +50,8 @@ create unique index if not exists feed_inventory_feed_type_key
 -- -----------------------------------------------------------------------------
 -- PASO 2 · Carga inicial
 -- -----------------------------------------------------------------------------
-insert into public.feed_inventory (id, feed_type, sacos, lb, updated_at)
-select gen_random_uuid(), t.feed_type, 200, 200 * t.lb_por_saco, now()
+insert into public.feed_inventory (feed_type, sacos, lb, updated_at)
+select t.feed_type, 200, 200 * t.lb_por_saco, now()
 from (values
   ('Gestación',   100),
   ('Lactancia',   100),
