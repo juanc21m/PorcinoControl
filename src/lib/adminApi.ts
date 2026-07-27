@@ -2,40 +2,48 @@ import { supabase } from './supabase';
 import type { UserRole } from '../types';
 
 /**
- * Operaciones privilegiadas de usuarios (crear / eliminar en Supabase Auth).
+ * Operaciones privilegiadas de usuarios (crear / eliminar).
  *
- * IMPORTANTE: crear y borrar usuarios requiere la llave `service_role`, que
- * NUNCA debe vivir en el frontend (cualquiera podría extraerla del bundle y
- * tomar control total de la base de datos, saltándose RLS). Por eso estas
- * operaciones se delegan a una Edge Function de Supabase (`admin-users`), que
- * corre en el servidor, guarda la llave como secreto y verifica que quien llama
- * sea realmente un Admin antes de actuar.
+ * Se resuelven con funciones RPC de PostgreSQL marcadas `SECURITY DEFINER`, que
+ * corren dentro de la base de datos con permisos elevados y validan por dentro
+ * que el llamante sea Admin activo. Así:
+ *   - no hace falta exponer la `service_role` key en el frontend, y
+ *   - no se usa `auth.signUp()`, que reemplazaría la sesión del administrador.
  *
- * Ver `supabase/functions/admin-users/index.ts` para el código a desplegar.
+ * El SQL de estas funciones está en `supabase/sql/user_management.sql`.
  */
 
-async function callAdminFn<T>(action: string, payload: Record<string, unknown>): Promise<T> {
-  const { data, error } = await supabase.functions.invoke('admin-users', {
-    body: { action, ...payload },
-  });
-  if (error) {
-    // Mensaje claro si la función aún no está desplegada.
-    const msg = /not found|404|failed to fetch/i.test(error.message)
-      ? 'La función admin-users no está desplegada en Supabase. Sigue las instrucciones de supabase/functions/admin-users.'
-      : error.message;
-    throw new Error(msg);
+function friendly(message: string): string {
+  if (/does not exist|could not find the function/i.test(message)) {
+    return 'Las funciones de gestión de usuarios no existen aún en Supabase. Corre el SQL de supabase/sql/user_management.sql.';
   }
-  const res = data as { error?: string } | null;
-  if (res?.error) throw new Error(res.error);
-  return data as T;
+  if (/ya existe|already exists|duplicate key/i.test(message)) {
+    return 'Ese correo ya tiene un usuario registrado.';
+  }
+  if (/solo un administrador|not authorized|permission denied/i.test(message)) {
+    return 'Solo un administrador activo puede gestionar usuarios.';
+  }
+  return message;
 }
 
-/** Crea el usuario en Auth con contraseña temporal y su perfil con rol. */
-export function adminCreateUser(email: string, tempPassword: string, role: UserRole) {
-  return callAdminFn<{ id: string }>('create', { email, tempPassword, role });
+/** Crea el usuario con contraseña temporal y su perfil con rol. */
+export async function adminCreateUser(
+  email: string,
+  tempPassword: string,
+  role: UserRole,
+): Promise<{ id: string }> {
+  const { data, error } = await supabase.rpc('create_user_with_role', {
+    p_email: email,
+    p_password: tempPassword,
+    p_role: role,
+  });
+  if (error) throw new Error(friendly(error.message));
+  return { id: data as string };
 }
 
-/** Elimina definitivamente el usuario de Auth (y su perfil por cascada). */
-export function adminDeleteUser(userId: string) {
-  return callAdminFn<{ ok: true }>('delete', { userId });
+/** Elimina definitivamente el usuario (y su perfil por cascada). */
+export async function adminDeleteUser(userId: string): Promise<{ ok: true }> {
+  const { error } = await supabase.rpc('delete_user_by_id', { p_user_id: userId });
+  if (error) throw new Error(friendly(error.message));
+  return { ok: true };
 }
